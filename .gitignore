@@ -1,0 +1,14 @@
+# root
+node_modules
+.env
+.env.*
+dist
+build
+.vite
+
+# frontend
+frontend/node_modules
+frontend/dist
+
+# backend
+backend/node_modules
