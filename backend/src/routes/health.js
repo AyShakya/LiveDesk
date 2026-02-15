@@ -1,10 +1,10 @@
 import { Router } from "express";
-import pool from "../configpostgres.js";
+import pool from "../config/postgres.js";
 import redis from "../config/redis.js";
 
 const router = Router();
 
-router.get("/health", async (req, res) => {
+router.get("/", async (req, res) => {
     try {
     await pool.query("SELECT 1");
     await redis.ping();

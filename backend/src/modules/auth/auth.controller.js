@@ -1,5 +1,7 @@
 import express from "express";
 import { register, login } from "./auth.service.js";
+import { findUserById } from "./auth.repo.js";
+import { requireAuth } from "../../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
@@ -29,7 +31,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
-router.get("/me", async (req, res) => {
+router.get("/me", requireAuth, async (req, res) => {
     const user = await findUserById(req.user.id);
     res.json(user);
 });

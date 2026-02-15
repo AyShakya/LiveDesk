@@ -8,12 +8,13 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon src/server.js",
-    "start": "node src/server.js"
+    "dev": "nodemon -r dotenv/config src/server.js",
+    "start": "node -r dotenv/config src/server.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
+    "crypto": "^1.0.1",
     "dotenv": "^17.2.4",
     "express": "^5.2.1",
     "ioredis": "^5.9.2",

@@ -1,4 +1,4 @@
-import pool from '../../config/db.config.js';
+import pool from "../../config/postgres.js";
 
 export async function createUser(email, passwordHash, name) {
     const query = `
@@ -23,8 +23,7 @@ export async function findUserById(id){
     const query = `
     SELECT id, email, name, created_at
     FROM users
-    WHER id = $1`;
-
+    WHERE id = $1`;
     const {rows} = await pool.query(query, [id]);
     return rows[0];
 }

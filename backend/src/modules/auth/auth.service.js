@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { createUser, findUserByEmail } from "./auth.repo";
+import { createUser, findUserByEmail } from "./auth.repo.js";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
