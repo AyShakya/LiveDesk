@@ -4,6 +4,7 @@ dotenv.config();
 import app from "./app.js";
 import pool from "./config/postgres.js";
 import redis from "./config/redis.js"
+import { subscribeToPresenceEvents } from "./modules/presence/presence.pubsub.js";
 
 const PORT = process.env.PORT;
 
@@ -21,4 +22,7 @@ async function startServer() {
     }
 }
 
+subscribeToPresenceEvents((event) => {
+  console.log("Presence event received:", event);
+});
 startServer();
