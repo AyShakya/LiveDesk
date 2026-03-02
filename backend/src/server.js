@@ -5,8 +5,11 @@ import app from "./app.js";
 import pool from "./config/postgres.js";
 import redis from "./config/redis.js"
 import { subscribeToPresenceEvents } from "./modules/presence/presence.pubsub.js";
+import { initWebSocket } from "./websocket/ws.server.js";
+import { subscribeToDocumentEvents } from "./modules/document/document.pubsub.js";
 
 const PORT = process.env.PORT;
+const ws = initWebSocket(server);
 
 async function startServer() {
     try {
@@ -23,6 +26,13 @@ async function startServer() {
 }
 
 subscribeToPresenceEvents((event) => {
-  console.log("Presence event received:", event);
+  ws.broadcast(event.workspaceId, event);
+});
+subscribeToDocumentEvents((event) => {
+  try {
+    ws.broadcastDoc(event.workspaceId, event.docId, event);
+  } catch (err) {
+    console.error("Failed to broadcast doc event:", err.message);
+  }
 });
 startServer();
