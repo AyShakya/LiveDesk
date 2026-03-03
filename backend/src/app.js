@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 
 import healthRouter from "./routes/health.js";
 import authRouter from "./modules/auth/auth.controller.js";
@@ -14,6 +15,13 @@ app.use(express.json({
     }
   }
 }));
+
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL,
+    credentials: true,
+  })
+);
 
 //Routes
 app.use("/health", healthRouter);

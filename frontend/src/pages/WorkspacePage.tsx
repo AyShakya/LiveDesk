@@ -31,32 +31,54 @@ export default function WorkspacePage() {
   }
 
   return (
-    <div>
-      <h1>Workspace</h1>
+  <div>
+    <h1 className="text-3xl font-bold mb-8">Documents</h1>
 
-      <div>
+    {/* Create Document */}
+    <div className="bg-white shadow-sm rounded-lg p-6 mb-8">
+      <h2 className="text-lg font-semibold mb-4">Create Document</h2>
+      <div className="flex gap-4">
         <input
-          placeholder="New document title"
+          className="flex-1 border rounded-md px-3 py-2"
+          placeholder="Document title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
-        <button onClick={handleCreate}>Create Document</button>
+        <button
+          onClick={handleCreate}
+          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+        >
+          Create
+        </button>
       </div>
+    </div>
 
-      <ul>
+    {/* Documents List */}
+    {documents.length === 0 ? (
+      <div className="text-gray-500">
+        No documents yet. Create one to start collaborating.
+      </div>
+    ) : (
+      <div className="space-y-4">
         {documents.map((doc) => (
-          <li key={doc.id}>
-            {doc.title}
+          <div
+            key={doc.id}
+            className="bg-white shadow-sm rounded-lg p-4 flex justify-between items-center"
+          >
+            <span className="font-medium">{doc.title}</span>
+
             <button
               onClick={() =>
                 navigate(`/workspace/${id}/document/${doc.id}`)
               }
+              className="bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-black"
             >
               Open
             </button>
-          </li>
+          </div>
         ))}
-      </ul>
-    </div>
-  )
+      </div>
+    )}
+  </div>
+)
 }

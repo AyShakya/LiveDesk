@@ -1,31 +1,35 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Login from "./pages/Login";
-import Home from "./pages/Home";
-import ProtectedRoute from "./components/ProtectedRoute";
-import Workspaces from "./pages/Workspaces";
-import WorkspacePage from "./pages/WorkspacePage";
-import DocumentEditor from "./pages/DocumentEditor";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
+import { useAuth } from "./auth/AuthContext"
+import ProtectedRoute from "./components/ProtectedRoute"
+
+import Home from "./pages/Home"
+import Login from "./pages/Login"
+import Workspaces from "./pages/Workspaces"
+import WorkspacePage from "./pages/WorkspacePage"
+import DocumentEditor from "./pages/DocumentEditor"
+import Layout from "./components/Layout"
 
 export default function App() {
+  const { user } = useAuth()
+
   return (
     <BrowserRouter>
       <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
 
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <Home />
-            </ProtectedRoute>
-          }
-        />
+        {/* Redirect root if logged in */}
+        {user && <Route path="/" element={<Navigate to="/workspaces" />} />}
 
+        {/* Protected Routes */}
         <Route
           path="/workspaces"
           element={
             <ProtectedRoute>
-              <Workspaces />
+              <Layout>
+                <Workspaces />
+              </Layout>
             </ProtectedRoute>
           }
         />
@@ -34,7 +38,9 @@ export default function App() {
           path="/workspace/:id"
           element={
             <ProtectedRoute>
-              <WorkspacePage />
+              <Layout>
+                <WorkspacePage />
+              </Layout>
             </ProtectedRoute>
           }
         />
@@ -43,11 +49,13 @@ export default function App() {
           path="/workspace/:id/document/:docId"
           element={
             <ProtectedRoute>
-              <DocumentEditor />
+              <Layout>
+                <DocumentEditor />
+              </Layout>
             </ProtectedRoute>
           }
         />
       </Routes>
     </BrowserRouter>
-  );
+  )
 }

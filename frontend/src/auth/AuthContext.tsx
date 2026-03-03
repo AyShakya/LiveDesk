@@ -24,7 +24,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       try {
-        const res = await http.get<User>("/me")
+        const res = await http.get<User>("/auth/me")
         setUser(res.data)
       } catch (error) {
         localStorage.removeItem("token")
@@ -37,7 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   async function login(email: string, password: string) {
-    const res = await http.post<AuthResponse>("/login", {
+    const res = await http.post<AuthResponse>("/auth/login", {
       email,
       password,
     })

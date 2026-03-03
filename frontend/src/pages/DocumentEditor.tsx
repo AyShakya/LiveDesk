@@ -80,36 +80,41 @@ export default function DocumentEditor() {
   if (!document) return <div>Document not found</div>;
 
   return (
-    <div>
-      <h1>{document.title}</h1>
-      <div style={{ marginBottom: "10px" }}>
-        <strong>Online:</strong>
-        {onlineUsers.length === 0 && " No one else online"}
+  <div>
+    <div className="flex justify-between items-center mb-6">
+      <h1 className="text-2xl font-bold">{document.title}</h1>
 
-        {onlineUsers.map((user) => (
-          <span
-            key={user.id}
-            style={{
-              marginLeft: "8px",
-              padding: "4px 8px",
-              background: "#eee",
-              borderRadius: "8px",
-            }}
-          >
-            {user.email}
-          </span>
-        ))}
+      <div className="text-sm">
+        {wsStatus === "connected" && (
+          <span className="text-green-600">● Connected</span>
+        )}
+        {wsStatus === "connecting" && (
+          <span className="text-yellow-600">● Connecting...</span>
+        )}
+        {wsStatus === "disconnected" && (
+          <span className="text-red-600">● Disconnected</span>
+        )}
       </div>
-      <div style={{ marginBottom: "10px" }}>
-        <strong>Status:</strong> {wsStatus === "connected" && "🟢 Connected"}
-        {wsStatus === "connecting" && "🟡 Connecting..."}
-        {wsStatus === "disconnected" && "🔴 Disconnected"}
-      </div>
-      <textarea
-        value={content}
-        onChange={(e) => handleChange(e.target.value)}
-        style={{ width: "100%", height: "300px" }}
-      />
     </div>
-  );
+
+    {/* Presence */}
+    <div className="flex gap-2 mb-6 flex-wrap">
+      {onlineUsers.map((user) => (
+        <div
+          key={user.id}
+          className="px-3 py-1 bg-gray-200 rounded-full text-sm"
+        >
+          {user.email}
+        </div>
+      ))}
+    </div>
+
+    {/* Editor */}
+    <textarea
+      value={content}
+      onChange={(e) => handleChange(e.target.value)}
+      className="w-full h-[400px] border rounded-lg p-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+    />
+  </div>
+)
 }

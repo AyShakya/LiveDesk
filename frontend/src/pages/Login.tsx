@@ -1,17 +1,17 @@
-import { useState } from "react"
-import { useAuth } from "../auth/AuthContext"
-import { useNavigate } from "react-router-dom"
+import { useState } from "react";
+import { useAuth } from "../auth/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export default function Login() {
-  const { login } = useAuth()
-  const navigate = useNavigate()
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   async function handleLogin() {
-    await login(email, password)
-    navigate("/")
+    await login(email, password);
+    navigate("/");
   }
 
   return (
@@ -25,5 +25,5 @@ export default function Login() {
       />
       <button onClick={handleLogin}>Login</button>
     </div>
-  )
+  );
 }
