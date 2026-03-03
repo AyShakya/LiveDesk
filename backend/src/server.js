@@ -7,8 +7,10 @@ import redis from "./config/redis.js"
 import { subscribeToPresenceEvents } from "./modules/presence/presence.pubsub.js";
 import { initWebSocket } from "./websocket/ws.server.js";
 import { subscribeToDocumentEvents } from "./modules/document/document.pubsub.js";
+import http from "http";
 
 const PORT = process.env.PORT;
+const server = http.createServer(app);
 const ws = initWebSocket(server);
 
 async function startServer() {
@@ -16,7 +18,7 @@ async function startServer() {
         await pool.query("SELECT 1");
         await redis.ping();
 
-        app.listen(PORT, () => {
+        server.listen(PORT, () => {
             console.log(`Server is running on port ${PORT}`);
         });
     } catch (error) {
