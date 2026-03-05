@@ -23,6 +23,13 @@ export async function handleDocEdit(ws, message) {
   doc.dirty = true;
   documentCache.set(ws.docId, doc);
 
+  broadcastLocalDoc(ws.workspaceId, ws.docId, {
+    type: "DOC_UPDATED",
+    workspaceId: ws.workspaceId,
+    docId: ws.docId,
+    content,
+    updatedBy: ws.userId,
+  });
   publishDocumentEvent({
     type: "DOC_UPDATED",
     workspaceId: ws.workspaceId,
@@ -31,40 +38,3 @@ export async function handleDocEdit(ws, message) {
     updatedBy: ws.userId,
   });
 }
-setInterval(() => {
-  const now = Date.now();
-  const IDLE_LIMIT = 10 * 60 * 1000; // 10 minutes
-
-  for (const [docId, doc] of documentCache) {
-    if (now - doc.lastAccess > IDLE_LIMIT) {
-      documentCache.delete(docId);
-    }
-  }
-}, 600000);
-setInterval(async () => {
-  const BATCH_LIMIT = 100;
-  let processed = 0;
-
-  for (const [docId, doc] of documentCache) {
-    if (!doc.dirty) continue;
-
-    try {
-      await pool.query(
-        `UPDATE documents
-         SET content=$1, updated_at=NOW()
-         WHERE id=$2`,
-        [doc.content, docId],
-      );
-
-      doc.dirty = false;
-
-      processed++;
-
-      if (processed >= BATCH_LIMIT) {
-        break;
-      }
-    } catch (err) {
-      console.error("Failed to persist document", err);
-    }
-  }
-}, 5000);

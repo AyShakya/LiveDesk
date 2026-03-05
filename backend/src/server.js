@@ -8,10 +8,12 @@ import { subscribeToPresenceEvents } from "./modules/presence/presence.pubsub.js
 import { initWebSocket } from "./websocket/ws.server.js";
 import { subscribeToDocumentEvents } from "./modules/document/document.pubsub.js";
 import http from "http";
+import { startDocumentWorkers } from "./modules/document/document.worker.js";
 
 const PORT = process.env.PORT;
 const server = http.createServer(app);
 const ws = initWebSocket(server);
+startDocumentWorkers();
 
 async function startServer() {
     try {

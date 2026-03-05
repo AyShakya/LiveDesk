@@ -1,17 +1,11 @@
-import pool from "../../config/postgres.js";
 import { createDocument, getDocument, listDocuments, updateDocument } from "./document.repo.js";
-
-async function isMemeber(userId, workspaceId){
-    const query = `
-    SELECT 1
-    FROM workspace_members
-    WHERE user_id = $1 AND workspace_id = $2`;
-    const {rows} = await pool.query(query, [userId, workspaceId]);
-    return rows.length > 0;
-}
+import {
+  deleteDocument as repoDeleteDocument,
+  isWorkspaceMember as repoIsWorkspaceMember,
+} from "./document.repo.js";
 
 export async function createDoc({workspaceId, title, userId}){
-    const allowed = await isMemeber(userId, workspaceId);
+    const allowed = await repoIsWorkspaceMember(workspaceId, userId);
     if(!allowed){
         throw new Error('FORBIDDEN');
     }
@@ -19,7 +13,7 @@ export async function createDoc({workspaceId, title, userId}){
 }
 
 export async function listDocs({ workspaceId, userId}){
-    const allowed = await isMemeber(userId, workspaceId);
+    const allowed = await repoIsWorkspaceMember(workspaceId, userId);
     if(!allowed){
         throw new Error('FORBIDDEN');
     }
@@ -43,9 +37,27 @@ export async function getDoc({docId, userId}){
     if(!doc){
         throw new Error('NOT_FOUND');
     }
-    const allowed = await isMemeber(userId, doc.workspace_id);
+    const allowed = await repoIsWorkspaceMember (doc.workspace_id, userId);
     if(!allowed){
         throw new Error('FORBIDDEN');
     }
     return doc;
+}
+
+export async function deleteDoc({ docId, userId }) {
+  const doc = await getDocument(docId);
+
+  if (!doc) {
+    throw new Error("NOT_FOUND");
+  }
+
+  const allowed = await repoIsWorkspaceMember(doc.workspace_id, userId);
+
+  if (!allowed) {
+    throw new Error("FORBIDDEN");
+  }
+
+  await repoDeleteDocument(docId);
+
+  return true;
 }

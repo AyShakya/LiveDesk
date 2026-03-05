@@ -1,6 +1,6 @@
 import express from "express";
 import { requireAuth } from "../../middlewares/auth.middleware.js";
-import { createDoc, getDoc, listDocs, updateDocs } from "./document.service.js";
+import { createDoc, getDoc, listDocs, updateDocs, deleteDoc } from "./document.service.js";
 
 const router = express.Router();
 
@@ -70,6 +70,21 @@ router.put("/:docId", requireAuth, async (req, res) => {
       return res.status(403).json({ error: "Access denied" });
     }
     res.status(500).json({ error: "Failed to update document" });
+  }
+});
+
+router.delete("/:docId", requireAuth, async (req, res) => {
+  try {
+    await deleteDoc({ docId: req.params.docId, userId: req.user.id });
+    res.status(204).end();
+  } catch (err) {
+    if (err.message === "NOT_FOUND") {
+      return res.status(404).json({ error: "Document not found" });
+    }
+    if (err.message === "FORBIDDEN") {
+      return res.status(403).json({ error: "Access denied" });
+    }
+    res.status(500).json({ error: "Failed to delete document" });
   }
 });
 

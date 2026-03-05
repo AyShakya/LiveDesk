@@ -29,7 +29,7 @@ export async function updateDocument({docId, content}) {
     RETURNING id, title, content, updated_at`;
 
     const {rows} = await pool.query(query, [content, docId]);
-    return rows[0];
+    return rows[0]?? null;
 }
 
 export async function getDocument(docId) {
@@ -39,5 +39,25 @@ export async function getDocument(docId) {
     WHERE id = $1`;
 
     const {rows} = await pool.query(query, [docId]);
-    return rows[0];
+    return rows[0]?? null;
+}
+
+export async function deleteDocument(docId) {
+  const query = `
+    DELETE FROM documents
+    WHERE id = $1
+    RETURNING id
+  `;
+
+  const { rows } = await pool.query(query, [docId]);
+  return rows[0] ?? null;
+}
+
+export async function isWorkspaceMember(workspaceId, userId) {
+  const q = `
+    SELECT 1 FROM workspace_members
+    WHERE workspace_id = $1 AND user_id = $2
+  `;
+  const { rows } = await pool.query(q, [workspaceId, userId]);
+  return rows.length > 0;
 }
