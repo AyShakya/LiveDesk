@@ -3,16 +3,16 @@ import type { Document } from "../types/document"
 
 export async function getWorkspaceDocuments(workspaceId: string) {
   const res = await http.get<Document[]>(
-    `/workspaces/${workspaceId}/documents`
+    `/documents/workspace/${workspaceId}`
   )
   return res.data
 }
 
 export async function createDocument(workspaceId: string, title: string) {
-  const res = await http.post<Document>(
-    `/workspaces/${workspaceId}/documents`,
-    { title }
-  )
+  const res = await http.post<Document>(`/documents`, {
+    workspaceId,
+    title,
+  })
   return res.data
 }
 

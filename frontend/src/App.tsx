@@ -1,13 +1,15 @@
+// App.tsx — complete replacement for Routes section
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import { useAuth } from "./auth/AuthContext"
 import ProtectedRoute from "./components/ProtectedRoute"
+import Layout from "./components/Layout"
 
 import Home from "./pages/Home"
 import Login from "./pages/Login"
 import Workspaces from "./pages/Workspaces"
 import WorkspacePage from "./pages/WorkspacePage"
 import DocumentEditor from "./pages/DocumentEditor"
-import Layout from "./components/Layout"
+import NotFound from "./pages/NotFound"
 
 export default function App() {
   const { user } = useAuth()
@@ -15,14 +17,11 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<Home />} />
+        {/* Root decides based on auth */}
+        <Route path="/" element={user ? <Navigate to="/workspaces" /> : <Home />} />
         <Route path="/login" element={<Login />} />
 
-        {/* Redirect root if logged in */}
-        {user && <Route path="/" element={<Navigate to="/workspaces" />} />}
-
-        {/* Protected Routes */}
+        {/* Protected routes */}
         <Route
           path="/workspaces"
           element={
@@ -55,6 +54,9 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+
+        {/* Fallback for unknown frontend routes */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   )

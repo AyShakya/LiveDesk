@@ -11,7 +11,7 @@ export default function Login() {
 
   async function handleLogin() {
     await login(email, password);
-    navigate("/");
+    navigate("/workspaces");
   }
 
   return (

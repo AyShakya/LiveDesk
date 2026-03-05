@@ -1,6 +1,8 @@
 import { WebSocketServer } from "ws";
 import { userOffline } from "../modules/presence/presence.service.js";
 import jwt from "jsonwebtoken";
+import { handleDocEdit } from "../modules/document/document.realtime.js";
+import { documentCache } from "./cacheModule.js";
 // WebSocket sends ONLY real-time events.
 // Initial document & presence state must be fetched via HTTP before connecting.
 const workspaceDocs = new Map();
@@ -10,6 +12,12 @@ workspaceDocs = {
   workspaceId: {
     docId: Set<ws>
   }
+}
+  documentCache = {
+   docId: {
+      content: "...",
+      lastAccess: timestamp
+   }
 }
 */
 export function initWebSocket(server) {
@@ -48,7 +56,7 @@ export function initWebSocket(server) {
         try {
           message = JSON.parse(raw);
         } catch {
-          return; 
+          return;
         }
 
         if (!message || typeof message !== "object") return;
@@ -72,6 +80,11 @@ export function initWebSocket(server) {
         if (docs.size === 0) {
           workspaceDocs.delete(workspaceId);
         }
+        const docSockets = docs.get(docId);
+        if (!docSockets || docSockets.size === 0) {
+          docs.delete(docId);
+          documentCache.delete(docId);
+        }
         try {
           await userOffline(workspaceId, ws.userId);
         } catch (err) {
@@ -88,9 +101,11 @@ export function initWebSocket(server) {
       const docs = workspaceDocs.get(String(workspaceId));
       if (!docs) return;
 
-      for (const ws of sockets) {
-        if (ws.readyState === ws.OPEN) {
-          ws.send(JSON.stringify(message));
+      for (const sockets of docs.values()) {
+        for (const ws of sockets) {
+          if (ws.readyState === ws.OPEN) {
+            ws.send(JSON.stringify(message));
+          }
         }
       }
     },

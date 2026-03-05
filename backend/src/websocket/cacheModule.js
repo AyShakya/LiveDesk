@@ -1,0 +1,1 @@
+export const documentCache = new Map();
