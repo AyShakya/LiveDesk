@@ -36,41 +36,39 @@ export default function Workspaces() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-8">Your Workspaces</h1>
+      <div className="flex justify-between items-center mb-10">
+        <h1 className="text-3xl font-bold">Your Workspaces</h1>
+      </div>
 
       {/* Create + Join Section */}
-      <div className="grid md:grid-cols-2 gap-6 mb-10">
-        {/* Create Workspace */}
-        <div className="bg-white shadow-sm rounded-lg p-6">
+      <div className="grid md:grid-cols-2 gap-8 mb-12">
+        <div className="card p-6">
           <h2 className="text-lg font-semibold mb-4">Create Workspace</h2>
+
           <input
-            className="w-full border rounded-md px-3 py-2 mb-4"
+            className="input mb-4"
             placeholder="Workspace name"
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
           />
-          <button
-            onClick={handleCreate}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-          >
-            Create
+
+          <button onClick={handleCreate} className="btn-primary">
+            Create Workspace
           </button>
         </div>
 
-        {/* Join Workspace */}
-        <div className="bg-white shadow-sm rounded-lg p-6">
+        <div className="card p-6">
           <h2 className="text-lg font-semibold mb-4">Join Workspace</h2>
+
           <input
-            className="w-full border rounded-md px-3 py-2 mb-4"
+            className="input mb-4"
             placeholder="Invite code"
             value={inviteCode}
             onChange={(e) => setInviteCode(e.target.value)}
           />
-          <button
-            onClick={handleJoin}
-            className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
-          >
-            Join
+
+          <button onClick={handleJoin} className="btn-secondary">
+            Join Workspace
           </button>
         </div>
       </div>

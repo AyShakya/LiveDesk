@@ -1,5 +1,6 @@
 import pool from "../../config/postgres.js";
 import { documentCache } from "../../websocket/cacheModule.js";
+import { broadcastLocalDoc } from "../../websocket/ws.server.js";
 import { publishDocumentEvent } from "./document.pubsub.js";
 
 export async function handleDocEdit(ws, message) {

@@ -1,63 +1,74 @@
-// App.tsx — complete replacement for Routes section
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import { useAuth } from "./auth/AuthContext"
-import ProtectedRoute from "./components/ProtectedRoute"
-import Layout from "./components/Layout"
+import { lazy, Suspense } from "react"
 
-import Home from "./pages/Home"
-import Login from "./pages/Login"
-import Workspaces from "./pages/Workspaces"
-import WorkspacePage from "./pages/WorkspacePage"
-import DocumentEditor from "./pages/DocumentEditor"
-import NotFound from "./pages/NotFound"
+import ProtectedRoute from "./components/ProtectedRoute"
+import Layout from "./components/Layouts/Layout"
+import WorkspaceLayout from "./components/Layouts/WorkspaceLayout"
+
+const Home = lazy(() => import("./pages/Home"))
+const Login = lazy(() => import("./pages/Login"))
+const Workspaces = lazy(() => import("./pages/Workspaces"))
+const WorkspacePage = lazy(() => import("./pages/WorkspacePage"))
+const DocumentEditor = lazy(() => import("./pages/DocumentEditor"))
+const NotFound = lazy(() => import("./pages/NotFound"))
 
 export default function App() {
+
   const { user } = useAuth()
 
   return (
+
     <BrowserRouter>
+
       <Routes>
-        {/* Root decides based on auth */}
-        <Route path="/" element={user ? <Navigate to="/workspaces" /> : <Home />} />
+
+        {/* Root */}
+        <Route
+          path="/"
+          element={user ? <Navigate to="/workspaces" /> : <Home />}
+        />
+
         <Route path="/login" element={<Login />} />
 
-        {/* Protected routes */}
+
+        {/* Dashboard Layout */}
         <Route
-          path="/workspaces"
           element={
             <ProtectedRoute>
-              <Layout>
-                <Workspaces />
-              </Layout>
+              <Layout />
             </ProtectedRoute>
           }
-        />
+        >
 
-        <Route
-          path="/workspace/:id"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <WorkspacePage />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
+          {/* Workspaces dashboard */}
+          <Route path="/workspaces" element={<Workspaces />} />
 
-        <Route
-          path="/workspace/:id/document/:docId"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <DocumentEditor />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
 
-        {/* Fallback for unknown frontend routes */}
+          {/* Workspace Layout */}
+          <Route path="/workspace/:id" element={<WorkspaceLayout />}>
+
+            {/* Workspace home */}
+            <Route index element={<WorkspacePage />} />
+
+            {/* Document editor */}
+            <Route
+              path="document/:docId"
+              element={<DocumentEditor />}
+            />
+
+          </Route>
+
+        </Route>
+
+
+        {/* Not found */}
         <Route path="*" element={<NotFound />} />
+
       </Routes>
+
     </BrowserRouter>
+
   )
+
 }

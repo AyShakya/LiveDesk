@@ -1,15 +1,12 @@
 import http from "./http"
-import type { Document } from "../types/document"
 
 export async function getWorkspaceDocuments(workspaceId: string) {
-  const res = await http.get<Document[]>(
-    `/documents/workspace/${workspaceId}`
-  )
+  const res = await http.get(`/documents/workspace/${workspaceId}`)
   return res.data
 }
 
 export async function createDocument(workspaceId: string, title: string) {
-  const res = await http.post<Document>(`/documents`, {
+  const res = await http.post("/documents", {
     workspaceId,
     title,
   })
@@ -17,16 +14,15 @@ export async function createDocument(workspaceId: string, title: string) {
 }
 
 export async function getDocument(docId: string) {
-  const res = await http.get<Document>(`/documents/${docId}`)
+  const res = await http.get(`/documents/${docId}`)
   return res.data
 }
 
-export async function updateDocument(
-  docId: string,
-  content: string
-) {
-  const res = await http.put<Document>(`/documents/${docId}`, {
-    content,
-  })
+export async function updateDocument(docId: string, data: { title?: string; content?: string }) {
+  const res = await http.put(`/documents/${docId}`, data)
   return res.data
+}
+
+export async function deleteDocument(docId: string) {
+  await http.delete(`/documents/${docId}`)
 }
