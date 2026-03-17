@@ -7,7 +7,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 export async function register({ email, password, name }) {
   const existingUser = await findUserByEmail(email);
   if (existingUser) {
-    throw new Error("User with this email already exists");
+    throw new Error("USER_ALREADY_EXISTS");
   }
   const passwordHash = await bcrypt.hash(password, 10);
   const user = await createUser(email, passwordHash, name);

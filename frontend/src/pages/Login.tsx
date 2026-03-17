@@ -25,22 +25,21 @@ export default function Login() {
     try {
 
       await login(email, password)
-
       navigate("/workspaces")
 
     } catch {
 
       setError("Invalid credentials")
 
+    } finally {
+      setLoading(false)
     }
-
-    setLoading(false)
 
   }
 
   return (
 
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="min-h-screen grid place-items-center px-4">
 
       <form
         className="bg-white p-8 rounded-xl shadow-md w-[400px]"
@@ -50,12 +49,14 @@ export default function Login() {
         }}
       >
 
-        <h1 className="text-2xl font-semibold mb-6">
-          Login
+        <h1 className="title-font text-3xl font-semibold mb-2 text-white">
+          Welcome back
         </h1>
 
+        <p className="text-slate-300 text-sm mb-6">Sign in to continue to your workspace.</p>
+
         {error && (
-          <div className="text-red-500 text-sm mb-4">
+          <div className="text-rose-200 bg-rose-500/20 border border-rose-300/40 rounded-xl px-3 py-2 text-sm mb-4">
             {error}
           </div>
         )}
@@ -83,16 +84,11 @@ export default function Login() {
           {loading ? "Logging in..." : "Login"}
         </button>
 
-        <div className="text-sm text-gray-500 mt-4">
-
-          Don't have an account?{" "}
-          <Link
-            to="/register"
-            className="text-blue-600"
-          >
+        <div className="text-sm text-slate-300 mt-4">
+          Don&apos;t have an account?{" "}
+          <Link to="/register" className="text-fuchsia-200 hover:text-cyan-200">
             Register
           </Link>
-
         </div>
 
       </form>

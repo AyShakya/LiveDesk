@@ -29,40 +29,35 @@ export default function MembersModal({ workspaceId, onClose }: Props) {
 
   return (
 
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
 
-      <div className="bg-white rounded-xl w-[500px] max-h-[70vh] shadow-lg flex flex-col">
+      <div className="glass-card w-[520px] max-h-[70vh] flex flex-col">
 
-        {/* Header */}
+        <div className="px-6 py-4 border-b border-white/10 flex justify-between items-center">
 
-        <div className="px-6 py-4 border-b flex justify-between items-center">
-
-          <h2 className="text-lg font-semibold">
+          <h2 className="text-lg font-semibold title-font">
             Workspace Members
           </h2>
 
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-black"
+            className="text-slate-300 hover:text-white"
           >
             ✕
           </button>
 
         </div>
 
-
-        {/* Body */}
-
         <div className="p-6 overflow-auto flex-1">
 
           {loading && (
-            <div className="text-gray-500 text-sm">
+            <div className="text-slate-300 text-sm">
               Loading members...
             </div>
           )}
 
           {!loading && members.length === 0 && (
-            <div className="text-gray-500 text-sm">
+            <div className="text-slate-300 text-sm">
               No members found
             </div>
           )}
@@ -73,7 +68,7 @@ export default function MembersModal({ workspaceId, onClose }: Props) {
 
               <div
                 key={member.id}
-                className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3"
+                className="flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-4 py-3"
               >
 
                 <div>
@@ -82,13 +77,13 @@ export default function MembersModal({ workspaceId, onClose }: Props) {
                     {member.name || "Unnamed"}
                   </div>
 
-                  <div className="text-sm text-gray-500">
+                  <div className="text-sm text-slate-300">
                     {member.email}
                   </div>
 
                 </div>
 
-                <div className="text-sm text-gray-600 capitalize">
+                <div className="text-sm text-fuchsia-200 capitalize">
                   {member.role}
                 </div>
 

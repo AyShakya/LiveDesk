@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import { useAuth } from "./auth/AuthContext"
-import { lazy} from "react"
+import { Suspense, lazy} from "react"
 
 import ProtectedRoute from "./components/ProtectedRoute"
 import Layout from "./components/Layouts/Layout"
@@ -21,6 +21,8 @@ export default function App() {
   return (
 
     <BrowserRouter>
+
+      <Suspense fallback={<div className="min-h-screen grid place-items-center text-slate-300">Loading...</div>}>
 
       <Routes>
 
@@ -67,6 +69,8 @@ export default function App() {
         <Route path="*" element={<NotFound />} />
 
       </Routes>
+
+      </Suspense>
 
     </BrowserRouter>
 

@@ -26,7 +26,6 @@ export default function Register() {
     try {
 
       await register(name,email,password)
-
       navigate("/workspaces")
 
     } catch {
@@ -43,7 +42,7 @@ export default function Register() {
 
   return (
 
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="min-h-screen grid place-items-center px-4">
 
       <form
         className="bg-white p-8 rounded-xl shadow-md w-[400px]"
@@ -53,12 +52,14 @@ export default function Register() {
         }}
       >
 
-        <h1 className="text-2xl font-semibold mb-6">
-          Register
+        <h1 className="title-font text-3xl font-semibold mb-2 text-white">
+          Create account
         </h1>
 
+        <p className="text-slate-300 text-sm mb-6">Start collaborating in seconds.</p>
+
         {error && (
-          <div className="text-red-500 text-sm mb-4">
+          <div className="text-rose-200 bg-rose-500/20 border border-rose-300/40 rounded-xl px-3 py-2 text-sm mb-4">
             {error}
           </div>
         )}
@@ -93,16 +94,11 @@ export default function Register() {
           {loading ? "Creating account..." : "Register"}
         </button>
 
-        <div className="text-sm text-gray-500 mt-4">
-
+        <div className="text-sm text-slate-300 mt-4">
           Already have an account?{" "}
-          <Link
-            to="/login"
-            className="text-blue-600"
-          >
+          <Link to="/login" className="text-fuchsia-200 hover:text-cyan-200">
             Login
           </Link>
-
         </div>
 
       </form>
