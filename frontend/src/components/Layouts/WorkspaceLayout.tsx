@@ -14,7 +14,7 @@ export default function WorkspaceLayout() {
 
       <DocumentsSidebar workspaceId={id} />
 
-      <div className="flex flex-col flex-1 bg-slate-950/20">
+      <div className="flex flex-col flex-1 bg-white/40">
 
         <WorkspaceHeader />
 

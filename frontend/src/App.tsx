@@ -22,7 +22,7 @@ export default function App() {
 
     <BrowserRouter>
 
-      <Suspense fallback={<div className="min-h-screen grid place-items-center text-slate-300">Loading...</div>}>
+      <Suspense fallback={<div className="min-h-screen grid place-items-center text-violet-700">Loading...</div>}>
 
       <Routes>
 
