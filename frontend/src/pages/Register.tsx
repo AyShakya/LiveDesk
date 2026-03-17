@@ -45,7 +45,7 @@ export default function Register() {
     <div className="min-h-screen grid place-items-center px-4">
 
       <form
-        className="glass-card w-full max-w-md p-8"
+        className="bg-white p-8 rounded-xl shadow-md w-[400px]"
         onSubmit={(e) => {
           e.preventDefault()
           handleRegister()
