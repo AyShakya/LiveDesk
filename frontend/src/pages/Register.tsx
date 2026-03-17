@@ -10,9 +10,18 @@ export default function Register() {
   const [name,setName] = useState("")
   const [email,setEmail] = useState("")
   const [password,setPassword] = useState("")
+  const [loading, setLoading] = useState(false)
   const [error,setError] = useState("")
 
   async function handleRegister() {
+
+    if (!name.trim() || !email.trim() || !password.trim()) {
+      setError("Name, email and password are required")
+      return
+    }
+
+    setLoading(true)
+    setError("")
 
     try {
 
@@ -24,6 +33,10 @@ export default function Register() {
 
       setError("Registration failed")
 
+    } finally {
+
+      setLoading(false)
+
     }
 
   }
@@ -32,7 +45,13 @@ export default function Register() {
 
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
 
-      <div className="bg-white p-8 rounded-xl shadow-md w-[400px]">
+      <form
+        className="bg-white p-8 rounded-xl shadow-md w-[400px]"
+        onSubmit={(e) => {
+          e.preventDefault()
+          handleRegister()
+        }}
+      >
 
         <h1 className="text-2xl font-semibold mb-6">
           Register
@@ -67,10 +86,11 @@ export default function Register() {
         />
 
         <button
-          onClick={handleRegister}
+          type="submit"
           className="btn-primary w-full"
+          disabled={loading}
         >
-          Register
+          {loading ? "Creating account..." : "Register"}
         </button>
 
         <div className="text-sm text-gray-500 mt-4">
@@ -85,7 +105,7 @@ export default function Register() {
 
         </div>
 
-      </div>
+      </form>
 
     </div>
 

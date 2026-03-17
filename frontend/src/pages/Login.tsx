@@ -14,6 +14,11 @@ export default function Login() {
 
   async function handleLogin() {
 
+    if (!email.trim() || !password.trim()) {
+      setError("Email and password are required")
+      return
+    }
+
     setLoading(true)
     setError("")
 
@@ -37,7 +42,13 @@ export default function Login() {
 
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
 
-      <div className="bg-white p-8 rounded-xl shadow-md w-[400px]">
+      <form
+        className="bg-white p-8 rounded-xl shadow-md w-[400px]"
+        onSubmit={(e) => {
+          e.preventDefault()
+          handleLogin()
+        }}
+      >
 
         <h1 className="text-2xl font-semibold mb-6">
           Login
@@ -65,7 +76,7 @@ export default function Login() {
         />
 
         <button
-          onClick={handleLogin}
+          type="submit"
           className="btn-primary w-full"
           disabled={loading}
         >
@@ -84,7 +95,7 @@ export default function Login() {
 
         </div>
 
-      </div>
+      </form>
 
     </div>
 
