@@ -41,7 +41,7 @@ export default function WorkspaceHeader() {
 
   if (!workspace) {
     return (
-      <div className="border-b border-white/10 bg-white/5 px-6 py-4 text-slate-300">
+      <div className="border-b border-violet-100 bg-white px-6 py-4 text-violet-600">
         Loading workspace...
       </div>
     )
@@ -49,16 +49,16 @@ export default function WorkspaceHeader() {
 
   return (
 
-    <div className="border-b border-white/10 bg-slate-950/40 px-6 py-4 flex items-center justify-between">
+    <div className="border-b border-violet-100 bg-white/95 px-6 py-4 flex items-center justify-between">
 
       <div className="flex items-center gap-3">
 
-        <h1 className="title-font text-2xl font-semibold text-white">
+        <h1 className="title-font text-2xl font-semibold text-violet-900">
           {workspace.name}
         </h1>
 
         {workspace.role && (
-          <span className="text-xs px-2.5 py-1 bg-fuchsia-500/15 border border-fuchsia-300/30 text-fuchsia-200 rounded-full capitalize">
+          <span className="text-xs px-2.5 py-1 bg-pink-100 border border-pink-200 text-pink-700 rounded-full capitalize">
             {workspace.role}
           </span>
         )}
@@ -83,7 +83,7 @@ export default function WorkspaceHeader() {
 
         <button
           onClick={() => navigate("/workspaces")}
-          className="rounded-xl border border-rose-300/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-100 hover:bg-rose-500/20"
+          className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 hover:bg-rose-100"
         >
           Exit
         </button>

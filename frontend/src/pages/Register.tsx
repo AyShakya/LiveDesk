@@ -45,21 +45,21 @@ export default function Register() {
     <div className="min-h-screen grid place-items-center px-4">
 
       <form
-        className="bg-white p-8 rounded-xl shadow-md w-[400px]"
+        className="glass-card p-8 w-[420px] max-w-full fade-up"
         onSubmit={(e) => {
           e.preventDefault()
           handleRegister()
         }}
       >
 
-        <h1 className="title-font text-3xl font-semibold mb-2 text-white">
+        <h1 className="title-font text-3xl font-semibold mb-2 text-violet-900">
           Create account
         </h1>
 
-        <p className="text-slate-300 text-sm mb-6">Start collaborating in seconds.</p>
+        <p className="text-violet-700 text-sm mb-6">Start collaborating in seconds.</p>
 
         {error && (
-          <div className="text-rose-200 bg-rose-500/20 border border-rose-300/40 rounded-xl px-3 py-2 text-sm mb-4">
+          <div className="text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2 text-sm mb-4">
             {error}
           </div>
         )}
@@ -94,9 +94,9 @@ export default function Register() {
           {loading ? "Creating account..." : "Register"}
         </button>
 
-        <div className="text-sm text-slate-300 mt-4">
+        <div className="text-sm text-violet-700 mt-4">
           Already have an account?{" "}
-          <Link to="/login" className="text-fuchsia-200 hover:text-cyan-200">
+          <Link to="/login" className="text-pink-500 hover:text-violet-700">
             Login
           </Link>
         </div>

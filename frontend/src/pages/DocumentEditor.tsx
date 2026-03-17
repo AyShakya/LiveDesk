@@ -117,7 +117,7 @@ export default function DocumentEditor() {
 
     return (
 
-      <div className="flex justify-center items-center h-[60vh] text-slate-300">
+      <div className="flex justify-center items-center h-[60vh] text-violet-700">
         Loading document...
       </div>
 
@@ -132,7 +132,7 @@ export default function DocumentEditor() {
 
       <div className="flex justify-between items-center mb-6">
 
-        <h1 className="title-font text-3xl font-semibold text-white">
+        <h1 className="title-font text-3xl font-semibold text-violet-900">
           {document?.title}
         </h1>
 
@@ -145,7 +145,7 @@ export default function DocumentEditor() {
 
               <div
                 key={user.id}
-                className="w-8 h-8 rounded-full bg-gradient-to-r from-fuchsia-500 to-cyan-500 text-white text-sm flex items-center justify-center border border-white/50"
+                className="w-8 h-8 rounded-full bg-pink-100 text-pink-700 text-sm flex items-center justify-center border border-pink-200 transition-transform duration-200 hover:scale-105"
               >
                 {user.email[0].toUpperCase()}
               </div>
@@ -157,15 +157,15 @@ export default function DocumentEditor() {
           <div className="text-sm">
 
             {wsStatus === "connected" &&
-              <span className="text-emerald-300 animate-pulse">● Live</span>
+              <span className="text-violet-700 soft-pulse">● Live</span>
             }
 
             {wsStatus === "connecting" &&
-              <span className="text-yellow-300">● Connecting</span>
+              <span className="text-amber-500">● Connecting</span>
             }
 
             {wsStatus === "disconnected" &&
-              <span className="text-rose-300">● Offline</span>
+              <span className="text-rose-600">● Offline</span>
             }
 
           </div>
@@ -174,7 +174,7 @@ export default function DocumentEditor() {
 
       </div>
 
-      <div className="glass-card p-3 mb-4 flex gap-2">
+      <div className="glass-card p-3 mb-4 flex gap-2 fade-up">
 
         <button className="btn-secondary text-sm">
           Bold
@@ -193,12 +193,12 @@ export default function DocumentEditor() {
       <textarea
         value={content}
         onChange={(e) => handleChange(e.target.value)}
-        className="w-full min-h-[500px] rounded-2xl border border-white/20 bg-slate-950/60 p-6 text-lg leading-7 focus:outline-none focus:ring-2 focus:ring-fuchsia-400 shadow-[0_20px_60px_rgba(15,23,42,0.55)]"
+        className="w-full min-h-[500px] rounded-2xl border border-violet-100 bg-white p-6 text-lg leading-7 text-violet-900 focus:outline-none focus:ring-2 focus:ring-violet-300 shadow-[0_20px_45px_rgba(124,58,237,0.08)] transition-shadow duration-300 focus:shadow-[0_22px_50px_rgba(236,72,153,0.15)]"
         placeholder="Start typing..."
       />
 
 
-      <div className="text-xs text-slate-400 mt-4">
+      <div className="text-xs text-violet-500 mt-4">
         Autosave enabled • Real-time collaboration
       </div>
 

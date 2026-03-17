@@ -86,10 +86,10 @@ export default function DocumentsSidebar({ workspaceId }: Props) {
 
   return (
 
-    <aside className="w-80 border-r border-white/10 bg-slate-950/55 backdrop-blur-xl flex flex-col">
+    <aside className="w-80 border-r border-violet-100 bg-white/95 flex flex-col">
 
-      <div className="px-6 py-4 border-b border-white/10">
-        <h2 className="title-font font-semibold text-xl text-white">
+      <div className="px-6 py-4 border-b border-violet-100">
+        <h2 className="title-font font-semibold text-xl text-violet-900">
           Documents
         </h2>
       </div>
@@ -106,8 +106,8 @@ export default function DocumentsSidebar({ workspaceId }: Props) {
               key={doc.id}
               className={`flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer border transition ${
                 active
-                  ? "bg-fuchsia-500/15 border-fuchsia-300/30 text-fuchsia-100"
-                  : "border-white/5 hover:bg-white/10"
+                  ? "bg-pink-50 border-pink-200 text-violet-900"
+                  : "border-violet-100 hover:bg-violet-50"
               }`}
             >
 
@@ -135,7 +135,7 @@ export default function DocumentsSidebar({ workspaceId }: Props) {
 
       </div>
 
-      <div className="border-t border-white/10 p-4">
+      <div className="border-t border-violet-100 p-4">
 
         <input
           className="input mb-3"

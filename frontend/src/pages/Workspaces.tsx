@@ -38,14 +38,14 @@ export default function Workspaces() {
 
   return (
     <div className="page-shell">
-      <div className="mb-10">
-        <p className="text-fuchsia-200 text-xs tracking-[0.2em] uppercase mb-2">Dashboard</p>
-        <h1 className="title-font text-4xl font-bold text-white">Your Workspaces</h1>
+      <div className="mb-10 fade-up">
+        <p className="text-pink-500 text-xs tracking-[0.2em] uppercase mb-2">Dashboard</p>
+        <h1 className="title-font text-4xl font-bold text-violet-900">Your Workspaces</h1>
       </div>
 
       <div className="grid md:grid-cols-2 gap-6 mb-10">
-        <div className="card p-6">
-          <h2 className="text-lg font-semibold mb-4">Create Workspace</h2>
+        <div className="card p-6 transition hover:-translate-y-0.5">
+          <h2 className="text-lg font-semibold mb-4 text-violet-900">Create Workspace</h2>
 
           <input
             className="input mb-4"
@@ -59,8 +59,8 @@ export default function Workspaces() {
           </button>
         </div>
 
-        <div className="card p-6">
-          <h2 className="text-lg font-semibold mb-4">Join Workspace</h2>
+        <div className="card p-6 transition hover:-translate-y-0.5">
+          <h2 className="text-lg font-semibold mb-4 text-violet-900">Join Workspace</h2>
 
           <input
             className="input mb-4"
@@ -76,7 +76,7 @@ export default function Workspaces() {
       </div>
 
       {workspaces.length === 0 ? (
-        <div className="card p-6 text-slate-300">
+        <div className="card p-6 text-violet-700">
           No workspaces yet. Create or join one to get started.
         </div>
       ) : (
@@ -84,12 +84,12 @@ export default function Workspaces() {
           {workspaces.map((ws) => (
             <div
               key={ws.id}
-              className="card p-6 border border-white/10 hover:border-fuchsia-300/30 transition"
+              className="card p-6 border border-violet-100 hover:border-pink-200 transition-all duration-200 hover:-translate-y-1"
             >
-              <h3 className="text-xl font-semibold mb-2 text-white">{ws.name}</h3>
+              <h3 className="text-xl font-semibold mb-2 text-violet-900">{ws.name}</h3>
 
-              <p className="text-sm text-slate-300 mb-5">
-                Invite: <span className="font-mono text-fuchsia-200">{ws.inviteCode}</span>
+              <p className="text-sm text-violet-700 mb-5">
+                Invite: <span className="font-mono text-pink-500">{ws.inviteCode}</span>
               </p>
 
               <div className="flex gap-2">
