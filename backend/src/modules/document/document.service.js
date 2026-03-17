@@ -20,16 +20,16 @@ export async function listDocs({ workspaceId, userId}){
     return await listDocuments(workspaceId);
 }
 
-export async function updateDocs({docId, content, userId}){
+export async function updateDocs({ docId, title, content, userId }) {
     const doc = await getDocument(docId);
     if(!doc){
         throw new Error('NOT_FOUND');
     }
-    const allowed = await isMemeber(userId, doc.workspace_id);
+    const allowed = await repoIsWorkspaceMember(doc.workspace_id, userId);
     if(!allowed){
         throw new Error('FORBIDDEN');
     }
-    return await updateDocument({docId, content});
+    return await updateDocument({ docId, title, content });
 }
 
 export async function getDoc({docId, userId}){
