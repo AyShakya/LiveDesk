@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import { useAuth } from "./auth/AuthContext"
-import { lazy, Suspense } from "react"
+import { lazy} from "react"
 
 import ProtectedRoute from "./components/ProtectedRoute"
 import Layout from "./components/Layouts/Layout"
@@ -8,6 +8,7 @@ import WorkspaceLayout from "./components/Layouts/WorkspaceLayout"
 
 const Home = lazy(() => import("./pages/Home"))
 const Login = lazy(() => import("./pages/Login"))
+const Register = lazy(() => import("./pages/Register"))
 const Workspaces = lazy(() => import("./pages/Workspaces"))
 const WorkspacePage = lazy(() => import("./pages/WorkspacePage"))
 const DocumentEditor = lazy(() => import("./pages/DocumentEditor"))
@@ -30,7 +31,7 @@ export default function App() {
         />
 
         <Route path="/login" element={<Login />} />
-
+        <Route path="/register" element={<Register />} />
 
         {/* Dashboard Layout */}
         <Route

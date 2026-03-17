@@ -14,50 +14,71 @@ interface Props {
 export default function DocumentsSidebar({ workspaceId }: Props) {
 
   const navigate = useNavigate()
-  const { docId } = useParams()
+
+  const { docId } = useParams<{ docId?: string }>()
 
   const [documents, setDocuments] = useState<Document[]>([])
-  const [title, setTitle] = useState("")
+  const [title, setTitle] = useState<string>("")
 
   useEffect(() => {
     load()
   }, [workspaceId])
 
-  async function load() {
+  async function load(): Promise<void> {
 
-    const data = await getWorkspaceDocuments(workspaceId)
-    setDocuments(data)
+    try {
+
+      const data: Document[] = await getWorkspaceDocuments(workspaceId)
+
+      setDocuments(data)
+
+    } catch (err) {
+
+      console.error("Failed to load documents", err)
+
+    }
 
   }
 
-  async function handleCreate() {
+  async function handleCreate(): Promise<void> {
 
     if (!title.trim()) return
 
-    const doc = await createDocument(workspaceId, title)
+    try {
 
-    setTitle("")
+      const doc: Document = await createDocument(workspaceId, title)
 
-    navigate(`/workspace/${workspaceId}/document/${doc.id}`)
+      setTitle("")
 
-    load()
+      navigate(`/workspace/${workspaceId}/document/${doc.id}`)
+
+      await load()
+
+    } catch (err) {
+
+      console.error("Failed to create document", err)
+
+    }
+
   }
 
-  function renameDoc(id: number, newTitle: string) {
+  function renameDoc(id: string, newTitle: string): void {
 
-    setDocuments(prev =>
-      prev.map(d =>
+    setDocuments((prev: Document[]) =>
+      prev.map((d: Document) =>
         d.id === id ? { ...d, title: newTitle } : d
       )
     )
 
   }
 
-  function removeDoc(id: number) {
+  function removeDoc(id: string): void {
 
-    setDocuments(prev => prev.filter(d => d.id !== id))
+    setDocuments((prev: Document[]) =>
+      prev.filter((d: Document) => d.id !== id)
+    )
 
-    if (String(id) === docId) {
+    if (docId && String(id) === docId) {
       navigate(`/workspace/${workspaceId}`)
     }
 
@@ -80,7 +101,7 @@ export default function DocumentsSidebar({ workspaceId }: Props) {
 
       <div className="flex-1 overflow-auto p-3 space-y-1">
 
-        {documents.map(doc => {
+        {documents.map((doc: Document) => {
 
           const active = String(doc.id) === docId
 
@@ -107,7 +128,7 @@ export default function DocumentsSidebar({ workspaceId }: Props) {
               <DocumentMenu
                 docId={doc.id}
                 title={doc.title}
-                onRename={(newTitle) => renameDoc(doc.id, newTitle)}
+                onRename={(newTitle: string) => renameDoc(doc.id, newTitle)}
                 onDelete={() => removeDoc(doc.id)}
               />
 
@@ -128,7 +149,9 @@ export default function DocumentsSidebar({ workspaceId }: Props) {
           className="w-full border rounded-lg px-3 py-2 mb-3"
           placeholder="New document..."
           value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setTitle(e.target.value)
+          }
         />
 
         <button

@@ -2,34 +2,29 @@ import { useState } from "react"
 import { useAuth } from "../auth/AuthContext"
 import { useNavigate, Link } from "react-router-dom"
 
-export default function Login() {
+export default function Register() {
 
-  const { login } = useAuth()
+  const { register } = useAuth()
   const navigate = useNavigate()
 
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
+  const [name,setName] = useState("")
+  const [email,setEmail] = useState("")
+  const [password,setPassword] = useState("")
+  const [error,setError] = useState("")
 
-  async function handleLogin() {
-
-    setLoading(true)
-    setError("")
+  async function handleRegister() {
 
     try {
 
-      await login(email, password)
+      await register(name,email,password)
 
       navigate("/workspaces")
 
     } catch {
 
-      setError("Invalid credentials")
+      setError("Registration failed")
 
     }
-
-    setLoading(false)
 
   }
 
@@ -40,7 +35,7 @@ export default function Login() {
       <div className="bg-white p-8 rounded-xl shadow-md w-[400px]">
 
         <h1 className="text-2xl font-semibold mb-6">
-          Login
+          Register
         </h1>
 
         {error && (
@@ -48,6 +43,13 @@ export default function Login() {
             {error}
           </div>
         )}
+
+        <input
+          className="input mb-3"
+          placeholder="Name"
+          value={name}
+          onChange={(e)=>setName(e.target.value)}
+        />
 
         <input
           className="input mb-3"
@@ -65,21 +67,20 @@ export default function Login() {
         />
 
         <button
-          onClick={handleLogin}
+          onClick={handleRegister}
           className="btn-primary w-full"
-          disabled={loading}
         >
-          {loading ? "Logging in..." : "Login"}
+          Register
         </button>
 
         <div className="text-sm text-gray-500 mt-4">
 
-          Don't have an account?{" "}
+          Already have an account?{" "}
           <Link
-            to="/register"
+            to="/login"
             className="text-blue-600"
           >
-            Register
+            Login
           </Link>
 
         </div>

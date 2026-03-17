@@ -2,7 +2,7 @@ import { useState } from "react";
 import { updateDocument, deleteDocument } from "../api/documents";
 
 interface Props {
-  docId: number;
+  docId: string;
   title: string;
   onRename: (newTitle: string) => void;
   onDelete: () => void;
