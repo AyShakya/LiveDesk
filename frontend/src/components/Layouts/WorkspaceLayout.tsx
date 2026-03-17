@@ -2,7 +2,6 @@ import { Outlet, useParams } from "react-router-dom"
 import DocumentsSidebar from "../DocumentsSidebar"
 import WorkspaceHeader from "../WorkspaceHeader"
 
-
 export default function WorkspaceLayout() {
 
   const { id } = useParams<{ id: string }>()
@@ -13,25 +12,14 @@ export default function WorkspaceLayout() {
 
     <div className="flex h-full">
 
-      {/* Documents sidebar */}
-
       <DocumentsSidebar workspaceId={id} />
 
-
-      {/* Main workspace area */}
-
-      <div className="flex flex-col flex-1">
-
-        {/* Header */}
+      <div className="flex flex-col flex-1 bg-slate-950/20">
 
         <WorkspaceHeader />
 
-        {/* Page content */}
-
-        <div className="flex-1 p-8 overflow-auto">
-
+        <div className="flex-1 p-6 md:p-8 overflow-auto">
           <Outlet />
-
         </div>
 
       </div>

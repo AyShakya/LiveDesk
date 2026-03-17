@@ -4,6 +4,7 @@ import type { User } from "../types/auth.ts"
 
 interface AuthContextType {
   user: User | null
+  loading: boolean
   login: (email: string, password: string) => Promise<void>
   register: (name: string, email: string, password: string) => Promise<void>
   logout: () => void
@@ -14,6 +15,7 @@ const AuthContext = createContext<AuthContextType | null>(null)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     init()
@@ -23,17 +25,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const token = localStorage.getItem("token")
 
-    if (!token) return
+    if (!token) {
+      setLoading(false)
+      return
+    }
 
     try {
 
       const me = await authApi.getMe()
 
-      setUser(me.user)
+      setUser(me)
 
     } catch {
 
       localStorage.removeItem("token")
+
+    } finally {
+
+      setLoading(false)
 
     }
 
@@ -45,9 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     localStorage.setItem("token", res.token)
 
-    const me = await authApi.getMe()
-
-    setUser(me.user)
+    setUser(res.user)
 
   }
 
@@ -57,9 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     localStorage.setItem("token", res.token)
 
-    const me = await authApi.getMe()
-
-    setUser(me.user)
+    setUser(res.user)
 
   }
 
@@ -74,7 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return (
 
     <AuthContext.Provider
-      value={{ user, login, register, logout }}
+      value={{ user, loading, login, register, logout }}
     >
 
       {children}

@@ -41,7 +41,7 @@ export default function WorkspaceHeader() {
 
   if (!workspace) {
     return (
-      <div className="border-b bg-white px-6 py-4">
+      <div className="border-b border-white/10 bg-white/5 px-6 py-4 text-slate-300">
         Loading workspace...
       </div>
     )
@@ -49,54 +49,46 @@ export default function WorkspaceHeader() {
 
   return (
 
-    <div className="border-b bg-white px-6 py-4 flex items-center justify-between">
-
-      {/* Workspace title */}
+    <div className="border-b border-white/10 bg-slate-950/40 px-6 py-4 flex items-center justify-between">
 
       <div className="flex items-center gap-3">
 
-        <h1 className="text-xl font-semibold">
+        <h1 className="title-font text-2xl font-semibold text-white">
           {workspace.name}
         </h1>
 
         {workspace.role && (
-          <span className="text-xs px-2 py-1 bg-gray-100 rounded">
+          <span className="text-xs px-2.5 py-1 bg-fuchsia-500/15 border border-fuchsia-300/30 text-fuchsia-200 rounded-full capitalize">
             {workspace.role}
           </span>
         )}
 
       </div>
 
-
-      {/* Actions */}
-
       <div className="flex items-center gap-3">
 
         <button
           onClick={() => setShowMembers(true)}
-          className="px-3 py-1.5 border rounded-lg hover:bg-gray-100 text-sm"
+          className="btn-secondary text-sm"
         >
           Members
         </button>
 
         <button
           onClick={() => setShowInvite(true)}
-          className="px-3 py-1.5 border rounded-lg hover:bg-gray-100 text-sm"
+          className="btn-secondary text-sm"
         >
           Invite
         </button>
 
         <button
           onClick={() => navigate("/workspaces")}
-          className="px-3 py-1.5 border rounded-lg hover:bg-gray-100 text-sm"
+          className="rounded-xl border border-rose-300/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-100 hover:bg-rose-500/20"
         >
           Exit
         </button>
 
       </div>
-
-
-      {/* Modals */}
 
       {showMembers && id && (
         <MembersModal

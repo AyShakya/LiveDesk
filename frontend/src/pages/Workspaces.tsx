@@ -23,25 +23,27 @@ export default function Workspaces() {
   }
 
   async function handleCreate() {
+    if (!newName.trim()) return;
     await createWorkspace(newName);
     setNewName("");
     load();
   }
 
   async function handleJoin() {
+    if (!inviteCode.trim()) return;
     await joinWorkspace(inviteCode);
     setInviteCode("");
     load();
   }
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-10">
-        <h1 className="text-3xl font-bold">Your Workspaces</h1>
+    <div className="page-shell">
+      <div className="mb-10">
+        <p className="text-fuchsia-200 text-xs tracking-[0.2em] uppercase mb-2">Dashboard</p>
+        <h1 className="title-font text-4xl font-bold text-white">Your Workspaces</h1>
       </div>
 
-      {/* Create + Join Section */}
-      <div className="grid md:grid-cols-2 gap-8 mb-12">
+      <div className="grid md:grid-cols-2 gap-6 mb-10">
         <div className="card p-6">
           <h2 className="text-lg font-semibold mb-4">Create Workspace</h2>
 
@@ -52,7 +54,7 @@ export default function Workspaces() {
             onChange={(e) => setNewName(e.target.value)}
           />
 
-          <button onClick={handleCreate} className="btn-primary">
+          <button onClick={handleCreate} className="btn-primary w-full">
             Create Workspace
           </button>
         </div>
@@ -67,43 +69,42 @@ export default function Workspaces() {
             onChange={(e) => setInviteCode(e.target.value)}
           />
 
-          <button onClick={handleJoin} className="btn-secondary">
+          <button onClick={handleJoin} className="btn-secondary w-full">
             Join Workspace
           </button>
         </div>
       </div>
 
-      {/* Workspace Grid */}
       {workspaces.length === 0 ? (
-        <div className="text-gray-500">
+        <div className="card p-6 text-slate-300">
           No workspaces yet. Create or join one to get started.
         </div>
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-6">
           {workspaces.map((ws) => (
             <div
               key={ws.id}
-              className="bg-white shadow-sm rounded-lg p-6 hover:shadow-md transition"
+              className="card p-6 border border-white/10 hover:border-fuchsia-300/30 transition"
             >
-              <h3 className="text-lg font-semibold mb-2">{ws.name}</h3>
+              <h3 className="text-xl font-semibold mb-2 text-white">{ws.name}</h3>
 
-              <p className="text-sm text-gray-500 mb-4">
-                Invite: <span className="font-mono">{ws.inviteCode}</span>
+              <p className="text-sm text-slate-300 mb-5">
+                Invite: <span className="font-mono text-fuchsia-200">{ws.inviteCode}</span>
               </p>
 
               <div className="flex gap-2">
                 <button
                   onClick={() => navigate(`/workspace/${ws.id}`)}
-                  className="bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-black"
+                  className="btn-primary"
                 >
-                  Open Workspace
+                  Open
                 </button>
 
                 <button
                   onClick={() => {
                     navigator.clipboard.writeText(ws.inviteCode);
                   }}
-                  className="px-3 py-2 border rounded-md text-sm"
+                  className="btn-secondary"
                 >
                   Copy Invite
                 </button>

@@ -10,19 +10,31 @@ export default function Register() {
   const [name,setName] = useState("")
   const [email,setEmail] = useState("")
   const [password,setPassword] = useState("")
+  const [loading, setLoading] = useState(false)
   const [error,setError] = useState("")
 
   async function handleRegister() {
 
+    if (!name.trim() || !email.trim() || !password.trim()) {
+      setError("Name, email and password are required")
+      return
+    }
+
+    setLoading(true)
+    setError("")
+
     try {
 
       await register(name,email,password)
-
       navigate("/workspaces")
 
     } catch {
 
       setError("Registration failed")
+
+    } finally {
+
+      setLoading(false)
 
     }
 
@@ -30,16 +42,24 @@ export default function Register() {
 
   return (
 
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="min-h-screen grid place-items-center px-4">
 
-      <div className="bg-white p-8 rounded-xl shadow-md w-[400px]">
+      <form
+        className="glass-card w-full max-w-md p-8"
+        onSubmit={(e) => {
+          e.preventDefault()
+          handleRegister()
+        }}
+      >
 
-        <h1 className="text-2xl font-semibold mb-6">
-          Register
+        <h1 className="title-font text-3xl font-semibold mb-2 text-white">
+          Create account
         </h1>
 
+        <p className="text-slate-300 text-sm mb-6">Start collaborating in seconds.</p>
+
         {error && (
-          <div className="text-red-500 text-sm mb-4">
+          <div className="text-rose-200 bg-rose-500/20 border border-rose-300/40 rounded-xl px-3 py-2 text-sm mb-4">
             {error}
           </div>
         )}
@@ -67,25 +87,21 @@ export default function Register() {
         />
 
         <button
-          onClick={handleRegister}
+          type="submit"
           className="btn-primary w-full"
+          disabled={loading}
         >
-          Register
+          {loading ? "Creating account..." : "Register"}
         </button>
 
-        <div className="text-sm text-gray-500 mt-4">
-
+        <div className="text-sm text-slate-300 mt-4">
           Already have an account?{" "}
-          <Link
-            to="/login"
-            className="text-blue-600"
-          >
+          <Link to="/login" className="text-fuchsia-200 hover:text-cyan-200">
             Login
           </Link>
-
         </div>
 
-      </div>
+      </form>
 
     </div>
 

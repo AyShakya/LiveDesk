@@ -86,20 +86,15 @@ export default function DocumentsSidebar({ workspaceId }: Props) {
 
   return (
 
-    <aside className="w-72 bg-white border-r flex flex-col">
+    <aside className="w-80 border-r border-white/10 bg-slate-950/55 backdrop-blur-xl flex flex-col">
 
-      {/* Header */}
-
-      <div className="px-6 py-4 border-b">
-        <h2 className="font-semibold text-lg">
+      <div className="px-6 py-4 border-b border-white/10">
+        <h2 className="title-font font-semibold text-xl text-white">
           Documents
         </h2>
       </div>
 
-
-      {/* Document List */}
-
-      <div className="flex-1 overflow-auto p-3 space-y-1">
+      <div className="flex-1 overflow-auto p-3 space-y-2">
 
         {documents.map((doc: Document) => {
 
@@ -109,10 +104,10 @@ export default function DocumentsSidebar({ workspaceId }: Props) {
 
             <div
               key={doc.id}
-              className={`flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer ${
+              className={`flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer border transition ${
                 active
-                  ? "bg-blue-50 text-blue-700"
-                  : "hover:bg-gray-100"
+                  ? "bg-fuchsia-500/15 border-fuchsia-300/30 text-fuchsia-100"
+                  : "border-white/5 hover:bg-white/10"
               }`}
             >
 
@@ -140,13 +135,10 @@ export default function DocumentsSidebar({ workspaceId }: Props) {
 
       </div>
 
-
-      {/* Create Document */}
-
-      <div className="border-t p-4">
+      <div className="border-t border-white/10 p-4">
 
         <input
-          className="w-full border rounded-lg px-3 py-2 mb-3"
+          className="input mb-3"
           placeholder="New document..."
           value={title}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -156,7 +148,7 @@ export default function DocumentsSidebar({ workspaceId }: Props) {
 
         <button
           onClick={handleCreate}
-          className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
+          className="btn-primary w-full"
         >
           Create
         </button>
