@@ -1,5 +1,6 @@
 import express from "express";
 import { requireAuth } from "../../middlewares/auth.middleware.js";
+import { workspaceJoinRateLimiter } from "../../middlewares/rate-limit.middleware.js";
 import {
   createWorkspaceForUser,
   getMyWorkspaces,
@@ -24,7 +25,7 @@ router.post("/", requireAuth, async (req, res) => {
   }
 });
 
-router.post("/join", requireAuth, async (req, res) => {
+router.post("/join", requireAuth, workspaceJoinRateLimiter, async (req, res) => {
   try {
     const { inviteCode } = req.body;
     const workspace = await joinWorkspace({ inviteCode, userId: req.user.id });

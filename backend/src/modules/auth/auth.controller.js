@@ -2,10 +2,11 @@ import express from "express";
 import { register, login } from "./auth.service.js";
 import { findUserById } from "./auth.repo.js";
 import { requireAuth } from "../../middlewares/auth.middleware.js";
+import { authRateLimiter } from "../../middlewares/rate-limit.middleware.js";
 
 const router = express.Router();
 
-router.post("/register", async (req, res) => {
+router.post("/register", authRateLimiter, async (req, res) => {
   try {
     const { email, password, name } = req.body;
     const result = await register({ email, password, name });
@@ -18,7 +19,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
-router.post("/login", async (req, res) => {
+router.post("/login", authRateLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
     const result = await login({ email, password });
