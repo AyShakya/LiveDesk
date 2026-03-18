@@ -21,15 +21,34 @@ export async function listDocuments(workspaceId) {
     return rows;
 }
 
-export async function updateDocument({docId, content}) {
-    const query = `
-    UPDATE documents
-    SET content = $1, updated_at = NOW()
-    WHERE id = $2
-    RETURNING id, title, content, updated_at`;
+export async function updateDocument({ docId, title, content }) {
+  const updates = [];
+  const values = [];
 
-    const {rows} = await pool.query(query, [content, docId]);
-    return rows[0]?? null;
+  if (title !== undefined) {
+    values.push(title);
+    updates.push(`title = $${values.length}`);
+  }
+
+  if (content !== undefined) {
+    values.push(content);
+    updates.push(`content = $${values.length}`);
+  }
+
+  if (updates.length === 0) {
+    return getDocument(docId);
+  }
+
+  values.push(docId);
+
+  const query = `
+    UPDATE documents
+    SET ${updates.join(", ")}, updated_at = NOW()
+    WHERE id = $${values.length}
+    RETURNING id, workspace_id, title, content, updated_at`;
+
+  const { rows } = await pool.query(query, values);
+  return rows[0] ?? null;
 }
 
 export async function getDocument(docId) {

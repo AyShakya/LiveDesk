@@ -58,6 +58,7 @@ router.put("/:docId", requireAuth, async (req, res) => {
     try {
     const doc = await updateDocs({
       docId: req.params.docId,
+      title: req.body.title,
       content: req.body.content,
       userId: req.user.id,
     });
