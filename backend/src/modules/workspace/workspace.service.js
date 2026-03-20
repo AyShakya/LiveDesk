@@ -16,7 +16,7 @@ function generateInviteCode() {
 
 export async function createWorkspaceForUser({ name, userId }) {
   if (!name || name.trim().length === 0) {
-    return res.status(400).json({ error: "Workspace name required" });
+    throw new Error("INVALID_NAME");
   }
   const inviteCode = generateInviteCode();
   const workspace = await createWorkspace({

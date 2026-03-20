@@ -21,31 +21,45 @@ router.post("/", requireAuth, async (req, res) => {
     });
     res.status(201).json(workspace);
   } catch (error) {
+    if (err.message === "INVALID_NAME") {
+      return res.status(400).json({ error: "Workspace name required" });
+    }
     res.status(500).json({ error: "Failed to create workspace" });
   }
 });
 
-router.post("/join", requireAuth, workspaceJoinRateLimiter, async (req, res) => {
-  try {
-    const { inviteCode } = req.body;
-    const workspace = await joinWorkspace({ inviteCode, userId: req.user.id });
-    res.status(200).json(workspace);
-  } catch (err) {
-    if (err.message === "WORKSPACE_NOT_FOUND") {
-      return res.status(404).json({ error: "Workspace not found" });
+router.post(
+  "/join",
+  requireAuth,
+  workspaceJoinRateLimiter,
+  async (req, res) => {
+    try {
+      const { inviteCode } = req.body;
+      const workspace = await joinWorkspace({
+        inviteCode,
+        userId: req.user.id,
+      });
+      res.status(200).json(workspace);
+    } catch (err) {
+      if (err.message === "WORKSPACE_NOT_FOUND") {
+        return res.status(404).json({ error: "Workspace not found" });
+      }
+      res.status(500).json({ error: "Failed to join workspace" });
     }
-    res.status(500).json({ error: "Failed to join workspace" });
-  }
-});
+  },
+);
 
 router.get("/", requireAuth, async (req, res) => {
-    const workspaces = await getMyWorkspaces(req.user.id);
-    res.status(200).json(workspaces);
+  const workspaces = await getMyWorkspaces(req.user.id);
+  res.status(200).json(workspaces);
 });
 
 router.get("/:workspaceId/members", requireAuth, async (req, res) => {
   try {
-    const members = await getWorkspaceMembers(req.params.workspaceId, req.user.id);
+    const members = await getWorkspaceMembers(
+      req.params.workspaceId,
+      req.user.id,
+    );
     res.json(members);
   } catch (err) {
     if (err.message === "FORBIDDEN") {
