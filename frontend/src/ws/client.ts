@@ -82,7 +82,7 @@ export function connectWebSocket(
       // socket will likely close; rely on onclose to schedule reconnect
     };
 
-    socket.onclose = (ev) => {
+    socket.onclose = () => {
       if (pingInterval) {
         clearInterval(pingInterval);
         pingInterval = null;

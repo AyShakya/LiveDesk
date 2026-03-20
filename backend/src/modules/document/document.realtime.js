@@ -3,8 +3,16 @@ import { documentCache } from "../../websocket/cacheModule.js";
 import { broadcastLocalDoc } from "../../websocket/ws.server.js";
 import { publishDocumentEvent } from "./document.pubsub.js";
 
+function applyDiff(oldText, diff) {
+  return (
+    oldText.slice(0, diff.start) +
+    diff.text +
+    oldText.slice(diff.end)
+  )
+}
+
 export async function handleDocEdit(ws, message) {
-  const { content } = message;
+  const { diff } = message;
 
   if (!documentCache.has(ws.docId)) {
     const { rows } = await pool.query(
@@ -19,7 +27,7 @@ export async function handleDocEdit(ws, message) {
     });
   }
   const doc = documentCache.get(ws.docId) || {};
-  doc.content = content;
+  doc.content = applyDiff(doc.content || "", diff);
   doc.lastAccess = Date.now();
   doc.dirty = true;
   documentCache.set(ws.docId, doc);
@@ -28,14 +36,14 @@ export async function handleDocEdit(ws, message) {
     type: "DOC_UPDATED",
     workspaceId: ws.workspaceId,
     docId: ws.docId,
-    content,
+    diff,
     updatedBy: ws.userId,
   });
   publishDocumentEvent({
     type: "DOC_UPDATED",
     workspaceId: ws.workspaceId,
     docId: ws.docId,
-    content,
+    diff,
     updatedBy: ws.userId,
   });
 }
