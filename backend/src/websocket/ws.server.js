@@ -2,6 +2,10 @@ import { WebSocketServer } from "ws";
 import jwt from "jsonwebtoken";
 import { userOffline } from "../modules/presence/presence.service.js";
 import { handleDocEdit } from "../modules/document/document.realtime.js";
+import {
+  getDocument,
+  isWorkspaceMember,
+} from "../modules/document/document.repo.js";
 import { documentCache } from "./cacheModule.js";
 
 const workspaceDocs = new Map();
@@ -28,7 +32,7 @@ export function initWebSocket(server) {
 
   console.log("WebSocket server initialized");
 
-  wss.on("connection", (ws, req) => {
+  wss.on("connection", async (ws, req) => {
 
     try {
 
@@ -50,6 +54,26 @@ export function initWebSocket(server) {
         user = jwt.verify(token, process.env.JWT_SECRET);
       } catch (err) {
         console.log("WS rejected: invalid token");
+        ws.close();
+        return;
+      }
+
+      const allowedWorkspace = await isWorkspaceMember(workspaceId, user.userId);
+
+      if (!allowedWorkspace) {
+        console.log(
+          `WS rejected: user=${user.userId} is not a member of workspace=${workspaceId}`,
+        );
+        ws.close();
+        return;
+      }
+
+      const document = await getDocument(docId);
+
+      if (!document || String(document.workspace_id) !== String(workspaceId)) {
+        console.log(
+          `WS rejected: doc=${docId} is not accessible in workspace=${workspaceId}`,
+        );
         ws.close();
         return;
       }
