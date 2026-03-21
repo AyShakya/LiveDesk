@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getDocument } from "../api/documents";
+import { getDocument, persistDocumentOnExit } from "../api/documents";
 import type { Document } from "../types/document";
 import {
   connectWebSocket,
@@ -13,6 +13,7 @@ import {
   getDiffOperations,
   type DiffOperation,
 } from "../utils/diff";
+import { EditorSkeleton } from "../components/ui/Skeleton";
 
 function getSelectionAfterOperations(
   cursorPos: number,
@@ -79,27 +80,70 @@ function rebaseDraftOntoContent(
   return applyDiffOperations(nextBaseContent, draftOperations);
 }
 
+function applyMarkdownWrap(
+  value: string,
+  selectionStart: number,
+  selectionEnd: number,
+  prefix: string,
+  suffix = prefix,
+) {
+  const selectedText = value.slice(selectionStart, selectionEnd);
+  const nextValue =
+    value.slice(0, selectionStart) +
+    prefix +
+    selectedText +
+    suffix +
+    value.slice(selectionEnd);
+  const cursorStart = selectionStart + prefix.length;
+  const cursorEnd = cursorStart + selectedText.length;
+
+  return {
+    nextValue,
+    selectionStart: cursorStart,
+    selectionEnd: cursorEnd,
+  };
+}
+
+function applyHeading(value: string, selectionStart: number, selectionEnd: number) {
+  const lineStart = value.lastIndexOf("\n", selectionStart - 1) + 1;
+  const lineEndIndex = value.indexOf("\n", selectionEnd);
+  const lineEnd = lineEndIndex === -1 ? value.length : lineEndIndex;
+  const line = value.slice(lineStart, lineEnd);
+  const trimmedLine = line.replace(/^#\s+/, "");
+  const nextLine = `# ${trimmedLine}`;
+  const nextValue = value.slice(0, lineStart) + nextLine + value.slice(lineEnd);
+
+  return {
+    nextValue,
+    selectionStart: lineStart + 2,
+    selectionEnd: lineStart + nextLine.length,
+  };
+}
+
 export default function DocumentEditor() {
   const { id, docId } = useParams<{ id: string; docId: string }>();
 
-  const [document, setDocument] = useState<Document | null>(null);
+  const [docRecord, setDocRecord] = useState<Document | null>(null);
   const [loading, setLoading] = useState(true);
   const [onlineUsers, setOnlineUsers] = useState<PresenceUser[]>([]);
   const [wsStatus, setWsStatus] = useState<
     "connecting" | "connected" | "disconnected"
   >("connecting");
-  const [syncState, setSyncState] = useState<
-    "ready" | "syncing" | "live" | "offline"
-  >("ready");
+  const [syncState, setSyncState] = useState<"ready" | "live" | "offline">(
+    "ready",
+  );
   const [lastVisibleEditAt, setLastVisibleEditAt] = useState<number | null>(null);
 
   const lastSentRef = useRef(0);
   const throttleInterval = 20;
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const contentRef = useRef("");
-  const wsStatusRef = useRef<"connecting" | "connected" | "disconnected">("connecting");
+  const wsStatusRef = useRef<"connecting" | "connected" | "disconnected">(
+    "connecting",
+  );
   const flushTimeoutRef = useRef<number | null>(null);
   const queuedValueRef = useRef<string | null>(null);
+  const saveOnExitRef = useRef<string | null>(null);
 
   function setEditorValue(nextValue: string) {
     const editor = textareaRef.current;
@@ -107,6 +151,10 @@ export default function DocumentEditor() {
     if (editor && editor.value !== nextValue) {
       editor.value = nextValue;
     }
+  }
+
+  function hasQueuedChanges() {
+    return queuedValueRef.current !== null;
   }
 
   useEffect(() => {
@@ -124,11 +172,12 @@ export default function DocumentEditor() {
 
         if (isCancelled) return;
 
-        setDocument(data);
+        setDocRecord(data);
         contentRef.current = data.content;
+        saveOnExitRef.current = data.content;
         queuedValueRef.current = null;
         setEditorValue(data.content);
-        setLastVisibleEditAt(Date.now());
+        setLastVisibleEditAt(data.content ? Date.now() : null);
       } catch (error) {
         if (isCancelled) return;
         console.error("Failed to load document", error);
@@ -139,7 +188,7 @@ export default function DocumentEditor() {
       }
     }
 
-    load();
+    void load();
 
     return () => {
       isCancelled = true;
@@ -165,20 +214,18 @@ export default function DocumentEditor() {
           const editor = textareaRef.current;
           const visibleContent =
             queuedValueRef.current ?? editor?.value ?? previousBaseContent;
-          const nextVisibleContent =
-            queuedValueRef.current !== null
-              ? rebaseDraftOntoContent(
-                  previousBaseContent,
-                  visibleContent,
-                  nextBaseContent,
-                )
-              : nextBaseContent;
-          const visibleAdjustmentOperations =
-            queuedValueRef.current !== null
-              ? getDiffOperations(visibleContent, nextVisibleContent)
-              : message.type === "DOC_UPDATED"
-                ? message.operations
-                : getDiffOperations(visibleContent, nextBaseContent);
+          const nextVisibleContent = hasQueuedChanges()
+            ? rebaseDraftOntoContent(
+                previousBaseContent,
+                visibleContent,
+                nextBaseContent,
+              )
+            : nextBaseContent;
+          const visibleAdjustmentOperations = hasQueuedChanges()
+            ? getDiffOperations(visibleContent, nextVisibleContent)
+            : message.type === "DOC_UPDATED"
+              ? message.operations
+              : getDiffOperations(visibleContent, nextBaseContent);
 
           const selectionStart = editor?.selectionStart ?? nextVisibleContent.length;
           const nextSelectionStart = getSelectionAfterOperations(
@@ -187,24 +234,17 @@ export default function DocumentEditor() {
           );
 
           contentRef.current = nextBaseContent;
+          saveOnExitRef.current = hasQueuedChanges()
+            ? nextVisibleContent
+            : nextBaseContent;
           setEditorValue(nextVisibleContent);
 
-          if (queuedValueRef.current !== null) {
+          if (hasQueuedChanges()) {
             queuedValueRef.current = nextVisibleContent;
           }
 
           setLastVisibleEditAt(Date.now());
-          setSyncState((currentState) => {
-            if (wsStatusRef.current !== "connected") {
-              return "offline";
-            }
-
-            if (queuedValueRef.current) {
-              return currentState === "ready" ? "live" : currentState;
-            }
-
-            return "live";
-          });
+          setSyncState(wsStatusRef.current === "connected" ? "live" : "offline");
 
           requestAnimationFrame(() => {
             if (editor) {
@@ -226,11 +266,11 @@ export default function DocumentEditor() {
             return "offline";
           }
 
-          if (status === "connecting") {
-            return currentState === "ready" ? "ready" : "syncing";
+          if (status === "connected") {
+            return currentState === "ready" && !hasQueuedChanges() ? "ready" : "live";
           }
 
-          return queuedValueRef.current ? "syncing" : "live";
+          return currentState;
         });
       },
     );
@@ -249,28 +289,50 @@ export default function DocumentEditor() {
   }, [id, docId]);
 
   useEffect(() => {
-    if (syncState !== "syncing") {
+    if (!docId) {
       return;
     }
 
-    const timeout = window.setTimeout(() => {
-      if (!queuedValueRef.current) {
-        setSyncState(wsStatusRef.current === "connected" ? "live" : "offline");
+    function saveLatestDocument() {
+      const latestValue = queuedValueRef.current ?? textareaRef.current?.value ?? saveOnExitRef.current;
+
+      if (latestValue === null || latestValue === contentRef.current) {
+        return;
       }
-    }, 180);
+
+      saveOnExitRef.current = latestValue;
+      persistDocumentOnExit(docId, latestValue);
+    }
+
+    const handleBeforeUnload = () => {
+      saveLatestDocument();
+    };
+
+    const handleVisibilityChange = () => {
+      if (window.document.visibilityState === "hidden") {
+        saveLatestDocument();
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("pagehide", handleBeforeUnload);
+    window.document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      window.clearTimeout(timeout);
+      saveLatestDocument();
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("pagehide", handleBeforeUnload);
+      window.document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [syncState, wsStatus]);
+  }, [docId]);
 
   function flushQueuedChanges() {
-    if (!queuedValueRef.current) {
+    if (!hasQueuedChanges()) {
       flushTimeoutRef.current = null;
       return;
     }
 
-    const nextValue = queuedValueRef.current;
+    const nextValue = queuedValueRef.current ?? "";
     queuedValueRef.current = null;
     flushTimeoutRef.current = null;
 
@@ -282,9 +344,10 @@ export default function DocumentEditor() {
     }
 
     contentRef.current = nextValue;
+    saveOnExitRef.current = nextValue;
     lastSentRef.current = Date.now();
     setLastVisibleEditAt(lastSentRef.current);
-    setSyncState(wsStatusRef.current === "connected" ? "syncing" : "offline");
+    setSyncState(wsStatusRef.current === "connected" ? "live" : "offline");
 
     sendMessage({
       type: "EDIT_DOC",
@@ -298,6 +361,7 @@ export default function DocumentEditor() {
     const elapsed = now - lastSentRef.current;
 
     queuedValueRef.current = nextValue;
+    saveOnExitRef.current = nextValue;
 
     if (flushTimeoutRef.current) {
       window.clearTimeout(flushTimeoutRef.current);
@@ -321,6 +385,38 @@ export default function DocumentEditor() {
     queueLiveSync(newValue);
   }
 
+  function handleToolbarAction(action: "bold" | "italic" | "heading") {
+    const editor = textareaRef.current;
+
+    if (!editor) {
+      return;
+    }
+
+    const selectionStart = editor.selectionStart;
+    const selectionEnd = editor.selectionEnd;
+    const currentValue = editor.value;
+
+    const nextSelection =
+      action === "bold"
+        ? applyMarkdownWrap(currentValue, selectionStart, selectionEnd, "**")
+        : action === "italic"
+          ? applyMarkdownWrap(currentValue, selectionStart, selectionEnd, "*")
+          : applyHeading(currentValue, selectionStart, selectionEnd);
+
+    setEditorValue(nextSelection.nextValue);
+    queueLiveSync(nextSelection.nextValue);
+
+    requestAnimationFrame(() => {
+      if (!textareaRef.current) {
+        return;
+      }
+
+      textareaRef.current.focus();
+      textareaRef.current.selectionStart = nextSelection.selectionStart;
+      textareaRef.current.selectionEnd = nextSelection.selectionEnd;
+    });
+  }
+
   const statusMeta = useMemo(() => {
     if (syncState === "offline") {
       return {
@@ -330,10 +426,10 @@ export default function DocumentEditor() {
       };
     }
 
-    if (syncState === "syncing" || wsStatus === "connecting") {
+    if (wsStatus === "connecting") {
       return {
-        label: "Syncing",
-        detail: "Changes are streaming in the background without interrupting your flow.",
+        label: "Connecting",
+        detail: "Rejoining the live session in the background.",
         tone: "text-amber-600 bg-amber-50 border-amber-100",
       };
     }
@@ -354,11 +450,7 @@ export default function DocumentEditor() {
   }, [syncState, wsStatus]);
 
   if (loading) {
-    return (
-      <div className="flex h-[60vh] items-center justify-center text-violet-700">
-        Loading document...
-      </div>
-    );
+    return <EditorSkeleton />;
   }
 
   return (
@@ -366,12 +458,12 @@ export default function DocumentEditor() {
       <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-violet-100 bg-white/90 px-3 py-1 text-xs font-semibold text-violet-700 shadow-sm backdrop-blur">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 soft-pulse" />
-            Real-time collaboration enabled
+            <span className="soft-pulse h-2 w-2 rounded-full bg-emerald-500" />
+            Markdown editing with real-time collaboration
           </div>
 
           <h1 className="title-font text-3xl font-semibold text-violet-900">
-            {document?.title}
+            {docRecord?.title}
           </h1>
           <p className="mt-2 text-sm text-violet-500">
             {formatLastChange(lastVisibleEditAt)}
@@ -413,15 +505,31 @@ export default function DocumentEditor() {
 
       <div className="glass-card mb-4 flex flex-wrap items-center justify-between gap-3 p-3 fade-up">
         <div className="flex flex-wrap gap-2">
-          <button className="btn-secondary text-sm">Bold</button>
-          <button className="btn-secondary text-sm">Italic</button>
-          <button className="btn-secondary text-sm">H1</button>
+          <button
+            className="btn-secondary text-sm"
+            onClick={() => handleToolbarAction("bold")}
+            type="button"
+          >
+            Bold
+          </button>
+          <button
+            className="btn-secondary text-sm"
+            onClick={() => handleToolbarAction("italic")}
+            type="button"
+          >
+            Italic
+          </button>
+          <button
+            className="btn-secondary text-sm"
+            onClick={() => handleToolbarAction("heading")}
+            type="button"
+          >
+            H1
+          </button>
         </div>
 
         <div className="rounded-full bg-violet-50 px-3 py-1 text-xs font-medium text-violet-600">
-          {wsStatus === "connected"
-            ? "Connection stays live while sync happens quietly in the background"
-            : "Reconnecting live session…"}
+          Use Markdown shortcuts like **bold**, *italic*, and # headings.
         </div>
       </div>
 
@@ -430,8 +538,9 @@ export default function DocumentEditor() {
           ref={textareaRef}
           defaultValue=""
           onChange={(e) => handleChange(e.target.value)}
+          spellCheck={false}
           className="min-h-[540px] w-full resize-y border-0 bg-transparent p-6 text-lg leading-8 text-violet-950 focus:outline-none focus:ring-0"
-          placeholder="Start typing..."
+          placeholder="Start typing in Markdown..."
         />
       </div>
 
@@ -439,8 +548,8 @@ export default function DocumentEditor() {
         <span>{statusMeta.detail}</span>
         <span>
           {syncState === "offline"
-            ? "Edits are kept locally until the live connection returns"
-            : "Live status stays steady while your document keeps syncing in real time"}
+            ? "Unsynced changes will be saved when the tab closes and the live connection returns"
+            : "Your latest draft is also persisted when you close the tab"}
         </span>
       </div>
     </div>
