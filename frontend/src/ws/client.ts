@@ -5,6 +5,7 @@ let reconnectTimeout: number | null = null;
 let manuallyClosed = false;
 let retryCount = 0;
 const maxRetries = 12;
+let connectionId = 0;
 
 let currentUrl: string | null = null;
 let messageQueue: string[] = [];
@@ -24,13 +25,20 @@ export function connectWebSocket(
     return;
   }
 
-  // If switching urls, close existing socket but don't mark manual close
-  disconnectWebSocket(false);
+  // If switching documents/workspaces, fully close the previous socket so it
+  // cannot reconnect and replay events into the next editor session.
+  disconnectWebSocket();
 
   currentUrl = url;
   manuallyClosed = false;
+  retryCount = 0;
+  const nextConnectionId = ++connectionId;
 
   function connect() {
+    if (nextConnectionId !== connectionId) {
+      return;
+    }
+
     if (retryCount >= maxRetries) {
       console.error("Max WebSocket retries reached");
       onStatusChange?.("disconnected");
@@ -40,66 +48,84 @@ export function connectWebSocket(
     onStatusChange?.("connecting");
 
     try {
-      socket = new WebSocket(url);
+      const activeSocket = new WebSocket(url);
+      socket = activeSocket;
+
+      activeSocket.onopen = () => {
+        if (nextConnectionId !== connectionId || socket !== activeSocket) {
+          activeSocket.close();
+          return;
+        }
+
+        retryCount = 0;
+        onStatusChange?.("connected");
+        console.log("WebSocket connected to", url);
+
+        // flush queued messages
+        while (messageQueue.length > 0 && socket && socket.readyState === WebSocket.OPEN) {
+          socket.send(messageQueue.shift()!);
+        }
+
+        // start ping/pong to keep connection alive (server should reply if needed)
+        if (pingInterval) clearInterval(pingInterval);
+        pingInterval = window.setInterval(() => {
+          try {
+            if (socket && socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: "PING" }));
+          } catch {}
+        }, 20000); // every 20s
+      };
+
+      activeSocket.onmessage = (event) => {
+        if (nextConnectionId !== connectionId || socket !== activeSocket) {
+          return;
+        }
+
+        try {
+          const data = JSON.parse(event.data);
+          // ignore PONG if you implement PONG from server
+          if (data?.type === "PONG") return;
+          onMessage(data);
+        } catch (e) {
+          console.error("Invalid WS message", e);
+        }
+      };
+
+      activeSocket.onerror = (err) => {
+        if (nextConnectionId !== connectionId || socket !== activeSocket) {
+          return;
+        }
+
+        console.warn("WebSocket error", err);
+        // socket will likely close; rely on onclose to schedule reconnect
+      };
+
+      activeSocket.onclose = () => {
+        if (nextConnectionId !== connectionId || socket !== activeSocket) {
+          return;
+        }
+
+        if (pingInterval) {
+          clearInterval(pingInterval);
+          pingInterval = null;
+        }
+
+        // If we closed intentionally, stop trying
+        if (manuallyClosed) {
+          onStatusChange?.("disconnected");
+          return;
+        }
+
+        onStatusChange?.("disconnected");
+
+        // schedule reconnect with exp backoff (fast initial retries)
+        retryCount++;
+        scheduleReconnect();
+      };
     } catch (err) {
       // immediate failure; schedule reconnect
       scheduleReconnect();
       return;
     }
-
-    socket.onopen = () => {
-      retryCount = 0;
-      onStatusChange?.("connected");
-      console.log("WebSocket connected to", url);
-
-      // flush queued messages
-      while (messageQueue.length > 0 && socket && socket.readyState === WebSocket.OPEN) {
-        socket.send(messageQueue.shift()!);
-      }
-
-      // start ping/pong to keep connection alive (server should reply if needed)
-      if (pingInterval) clearInterval(pingInterval);
-      pingInterval = window.setInterval(() => {
-        try {
-          if (socket && socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: "PING" }));
-        } catch {}
-      }, 20000); // every 20s
-    };
-
-    socket.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        // ignore PONG if you implement PONG from server
-        if (data?.type === "PONG") return;
-        onMessage(data);
-      } catch (e) {
-        console.error("Invalid WS message", e);
-      }
-    };
-
-    socket.onerror = (err) => {
-      console.warn("WebSocket error", err);
-      // socket will likely close; rely on onclose to schedule reconnect
-    };
-
-    socket.onclose = () => {
-      if (pingInterval) {
-        clearInterval(pingInterval);
-        pingInterval = null;
-      }
-
-      // If we closed intentionally, stop trying
-      if (manuallyClosed) {
-        onStatusChange?.("disconnected");
-        return;
-      }
-
-      onStatusChange?.("disconnected");
-
-      // schedule reconnect with exp backoff (fast initial retries)
-      retryCount++;
-      scheduleReconnect();
-    };
   }
 
   function scheduleReconnect() {
