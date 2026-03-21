@@ -1,3 +1,4 @@
+import pool from "../../config/postgres.js";
 import redis from "../../config/redis.js";
 import { publishPresenceEvent } from "./presence.pubsub.js";
 
@@ -24,6 +25,22 @@ export async function userOffline(workspaceId, userId) {
 }
 
 export async function getOnlineUsers(workspaceId) {
-  const users = await redis.smembers(key(workspaceId));
-  return users.map(Number);
+  const userIds = await redis.smembers(key(workspaceId));
+
+  if (userIds.length === 0) {
+    return [];
+  }
+
+  const query = `
+    SELECT id, email
+    FROM users
+    WHERE id = ANY($1::int[])
+    ORDER BY email
+  `;
+  const { rows } = await pool.query(query, [userIds.map(Number)]);
+
+  return rows.map((user) => ({
+    id: String(user.id),
+    email: user.email,
+  }));
 }

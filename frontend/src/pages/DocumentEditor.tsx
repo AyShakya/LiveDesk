@@ -7,11 +7,44 @@ import {
   sendMessage,
   disconnectWebSocket,
 } from "../ws/client";
-import type { PresenceUser } from "../types/ws";
-import { getDiff } from "../utils/diff";
+import type { PresenceUser, WSMessage } from "../types/ws";
+import {
+  applyDiffOperations,
+  getDiffOperations,
+  type DiffOperation,
+} from "../utils/diff";
 
-function applyDiff(oldText: string, diff: any) {
-  return oldText.slice(0, diff.start) + diff.text + oldText.slice(diff.end);
+
+function getSelectionAfterOperations(
+  cursorPos: number,
+  operations: DiffOperation[],
+) {
+  return operations.reduce((nextCursor, operation) => {
+    if (operation.index >= nextCursor) {
+      return nextCursor
+    }
+
+    if (operation.type === "insert") {
+      return nextCursor + operation.text.length
+    }
+
+    if (operation.type === "delete") {
+      const deletionEnd = operation.index + operation.length
+      if (deletionEnd <= nextCursor) {
+        return Math.max(operation.index, nextCursor - operation.length)
+      }
+
+      return operation.index
+    }
+
+    const replacedEnd = operation.index + operation.length
+
+    if (replacedEnd <= nextCursor) {
+      return operation.index + operation.text.length + (nextCursor - replacedEnd)
+    }
+
+    return operation.index + operation.text.length
+  }, cursorPos)
 }
 
 export default function DocumentEditor() {
@@ -26,10 +59,11 @@ export default function DocumentEditor() {
   >("connecting");
 
   const lastSentRef = useRef(0);
-  const THROTTLE_INTERVAL = 100; // ms
+  const THROTTLE_INTERVAL = 100; 
   const isRemoteUpdate = useRef(false);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const contentRef = useRef(content);
+  const lastEditedAtRef = useRef<number | null>(null);
 
   useEffect(() => {
     contentRef.current = content;
@@ -75,21 +109,41 @@ export default function DocumentEditor() {
     connectWebSocket(
       wsUrl,
 
-      (message) => {
+      (message: WSMessage) => {
+        if (message.type === "DOC_SYNC") {
+          contentRef.current = message.content;
+          setContent(message.content);
+          setDocument((currentDocument) =>
+            currentDocument
+              ? { ...currentDocument, content: message.content }
+              : currentDocument,
+          );
+        }
         if (message.type === "DOC_UPDATED") {
-          const updated = applyDiff(contentRef.current, message.diff);
-
+          const updated = applyDiffOperations(
+            contentRef.current,
+            message.operations,
+          );
           const el = textareaRef.current;
           const cursorPos = el?.selectionStart || 0;
+          const nextCursorPos = getSelectionAfterOperations(
+            cursorPos,
+            message.operations,
+          );
 
           isRemoteUpdate.current = true;
           contentRef.current = updated;
           setContent(updated);
+          setDocument((currentDocument) =>
+            currentDocument
+              ? { ...currentDocument, content: updated }
+              : currentDocument,
+          );
 
           requestAnimationFrame(() => {
             if (el) {
-              el.selectionStart = cursorPos;
-              el.selectionEnd = cursorPos;
+              el.selectionStart = nextCursorPos;
+              el.selectionEnd = nextCursorPos;
             }
           });
         }
@@ -126,16 +180,22 @@ export default function DocumentEditor() {
     const now = Date.now();
 
     if (now - lastSentRef.current > THROTTLE_INTERVAL) {
+      const operations = getDiffOperations(oldValue, newValue);
+      if (operations.length === 0) {
+        return;
+      }
       lastSentRef.current = now;
-
-      const diff = getDiff(oldValue, newValue);
+      lastEditedAtRef.current = now;
 
       sendMessage({
         type: "EDIT_DOC",
-        diff,
+        operations,
       });
     }
   }
+
+  const saveIndicator = 
+    lastEditedAtRef.current === null ? "Autosave ready" : wsStatus === "connected" ? "Changes sycning live" : "Changes will sync when connection resumes";
 
   if (loading) {
     return (
@@ -180,12 +240,20 @@ export default function DocumentEditor() {
         </div>
       </div>
 
-      <div className="glass-card p-3 mb-4 flex gap-2 fade-up">
-        <button className="btn-secondary text-sm">Bold</button>
+      <div className="glass-card p-3 mb-4 flex flex-wrap items-center justify-between gap-3 fade-up">
+        <div className="flex gap-2">
+          <button className="btn-secondary text-sm">Bold</button>
 
         <button className="btn-secondary text-sm">Italic</button>
 
         <button className="btn-secondary text-sm">H1</button>
+        </div>
+
+        <div className="text-xs font-medium text-violet-500">
+          {onlineUsers.length > 0
+            ? `${onlineUsers.length} collaborator${onlineUsers.length > 1 ? "s" : ""} online`
+            : "Only you are viewing this document"}
+        </div>
       </div>
 
       <textarea
@@ -197,7 +265,7 @@ export default function DocumentEditor() {
       />
 
       <div className="text-xs text-violet-500 mt-4">
-        Autosave enabled • Real-time collaboration
+        {saveIndicator} • Real-time collaboration
       </div>
     </div>
   );

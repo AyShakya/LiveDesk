@@ -1,6 +1,6 @@
 import { WebSocketServer } from "ws";
 import jwt from "jsonwebtoken";
-import { userOffline } from "../modules/presence/presence.service.js";
+import { getOnlineUsers, userOffline, userOnline } from "../modules/presence/presence.service.js";
 import { handleDocEdit } from "../modules/document/document.realtime.js";
 import {
   getDocument,
@@ -9,8 +9,37 @@ import {
 import { documentCache } from "./cacheModule.js";
 
 const workspaceDocs = new Map();
+export const WS_SERVER_INSTANCE_ID = `ws-${process.pid}`;
 
 const ALLOWED_MESSAGE_TYPES = new Set(["EDIT_DOC", "PING"]);
+
+function isValidOperations(operation) {
+  if (!operation || typeof operation !== "object") {
+    return false;
+  }
+
+  if (typeof operation.index !== "number" || operation.index < 0) {
+    return false;
+  }
+
+  if (operation.type === "insert") {
+    return typeof operation.text === "string";
+  }
+
+  if (operation.type === "delete") {
+    return typeof operation.length === "number" && operation.length >= 0;
+  }
+
+  if (operation.type === "replace") {
+    return (
+      typeof operation.length === "number" &&
+      operation.length >= 0 &&
+      typeof operation.text === "string"
+    );
+  }
+
+  return false;
+}
 
 export function broadcastLocalDoc(workspaceId, docId, message) {
   const docs = workspaceDocs.get(String(workspaceId));
@@ -20,6 +49,9 @@ export function broadcastLocalDoc(workspaceId, docId, message) {
   if (!sockets) return;
 
   for (const ws of sockets) {
+    if(urlToHttpOptions.exclcudeUserId !== undefined && String(ws.userId) === String(options.exclcudeUserId)){
+      continue;
+    }
     if (ws.readyState === ws.OPEN) {
       ws.send(JSON.stringify(message));
     }
@@ -27,15 +59,12 @@ export function broadcastLocalDoc(workspaceId, docId, message) {
 }
 
 export function initWebSocket(server) {
-
   const wss = new WebSocketServer({ server });
 
   console.log("WebSocket server initialized");
 
   wss.on("connection", async (ws, req) => {
-
     try {
-
       const url = new URL(req.url, `http://${req.headers.host}`);
 
       const token = url.searchParams.get("token");
@@ -58,7 +87,10 @@ export function initWebSocket(server) {
         return;
       }
 
-      const allowedWorkspace = await isWorkspaceMember(workspaceId, user.userId);
+      const allowedWorkspace = await isWorkspaceMember(
+        workspaceId,
+        user.userId,
+      );
 
       if (!allowedWorkspace) {
         console.log(
@@ -81,6 +113,7 @@ export function initWebSocket(server) {
       ws.userId = user.userId;
       ws.workspaceId = workspaceId;
       ws.docId = docId;
+      ws.serverInstanceId = WS_SERVER_INSTANCE_ID;
 
       console.log(
         `WS connected user=${ws.userId} workspace=${workspaceId} doc=${docId}`,
@@ -97,9 +130,26 @@ export function initWebSocket(server) {
       }
 
       docs.get(docId).add(ws);
+      const cachedDocument = documentCache.get(docId);
+      await userOnline(workspaceId, ws.userId);
+      const onlineUsers = await getOnlineUsers(workspaceId);
+
+      ws.send(
+        JSON.stringify({
+          type: "DOC_SYNC",
+          docId,
+          content: cachedDocument?.content ?? document.content ?? "",
+        }),
+      );
+
+      ws.send(
+        JSON.stringify({
+          type: "PRESENCE_UPDATE",
+          users: onlineUsers,
+        })
+      )
 
       ws.on("message", async (raw) => {
-
         let message;
 
         try {
@@ -114,26 +164,24 @@ export function initWebSocket(server) {
         if (!ALLOWED_MESSAGE_TYPES.has(message.type)) return;
 
         try {
-
           if (message.type === "PING") {
             ws.send(JSON.stringify({ type: "PONG" }));
             return;
           }
 
           if (message.type === "EDIT_DOC") {
-
-            if (typeof message.content !== "string") return;
+            if(!Array.isArray(message.operations) || message.operations.length === 0 || !message.operations.every(isValidOperations)){
+              return;
+            }
 
             await handleDocEdit(ws, message);
           }
-
         } catch (err) {
           console.error("WS message handling error:", err);
         }
       });
 
       ws.on("close", async () => {
-
         console.log(
           `WS disconnected user=${ws.userId} workspace=${workspaceId} doc=${docId}`,
         );
@@ -156,20 +204,15 @@ export function initWebSocket(server) {
         } catch (err) {
           console.error("Presence update failed:", err);
         }
-
       });
-
     } catch (err) {
       console.error("WS connection setup failed:", err);
       ws.close();
     }
-
   });
 
   return {
-
     broadcast(workspaceId, message) {
-
       const docs = workspaceDocs.get(String(workspaceId));
       if (!docs) return;
 
@@ -180,11 +223,9 @@ export function initWebSocket(server) {
           }
         }
       }
-
     },
 
-    broadcastDoc(workspaceId, docId, message) {
-
+    broadcastDoc(workspaceId, docId, message, options = {}) {
       const docs = workspaceDocs.get(String(workspaceId));
       if (!docs) return;
 
@@ -192,13 +233,11 @@ export function initWebSocket(server) {
       if (!sockets) return;
 
       for (const ws of sockets) {
+        if(options.exclcudeUserId !== undefined && String(ws.userId) === String(options.exclcudeUserId)) continue;
         if (ws.readyState === ws.OPEN) {
           ws.send(JSON.stringify(message));
         }
       }
-
     },
-
   };
-
 }
