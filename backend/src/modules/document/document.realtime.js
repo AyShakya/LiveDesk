@@ -28,7 +28,7 @@ function applyOperations(content, operations) {
 }
 
 export async function handleDocEdit(ws, message) {
-  const { operations } = message;
+  const { operations, content } = message;
 
   if (!documentCache.has(ws.docId)) {
     const { rows } = await pool.query(
@@ -43,7 +43,7 @@ export async function handleDocEdit(ws, message) {
     });
   }
   const doc = documentCache.get(ws.docId) || {};
-  doc.content = applyOperations(doc.content || "", operations);
+  doc.content = typeof content === "string" ? content : applyOperations(doc.content || "", operations);
   doc.lastAccess = Date.now();
   doc.dirty = true;
   documentCache.set(ws.docId, doc);
@@ -54,6 +54,7 @@ export async function handleDocEdit(ws, message) {
     docId: ws.docId,
     operations,
     updatedBy: ws.userId,
+    content: doc.content,
     sourceInstance: ws.serverInstanceId,
   };
 

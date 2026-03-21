@@ -65,11 +65,24 @@ function formatLastChange(timestamp: number | null) {
   return `Updated ${minutesAgo}m ago`;
 }
 
+function rebaseDraftOntoContent(
+  baseContent: string,
+  draftContent: string,
+  nextBaseContent: string,
+) {
+  const draftOperations = getDiffOperations(baseContent, draftContent);
+
+  if (draftOperations.length === 0) {
+    return nextBaseContent;
+  }
+
+  return applyDiffOperations(nextBaseContent, draftOperations);
+}
+
 export default function DocumentEditor() {
   const { id, docId } = useParams<{ id: string; docId: string }>();
 
   const [document, setDocument] = useState<Document | null>(null);
-  const [content, setContent] = useState("");
   const [loading, setLoading] = useState(true);
   const [onlineUsers, setOnlineUsers] = useState<PresenceUser[]>([]);
   const [wsStatus, setWsStatus] = useState<
@@ -81,16 +94,24 @@ export default function DocumentEditor() {
   const [lastVisibleEditAt, setLastVisibleEditAt] = useState<number | null>(null);
 
   const lastSentRef = useRef(0);
-  const throttleInterval = 45;
-  const isRemoteUpdate = useRef(false);
+  const throttleInterval = 20;
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const contentRef = useRef(content);
+  const contentRef = useRef("");
+  const wsStatusRef = useRef<"connecting" | "connected" | "disconnected">("connecting");
   const flushTimeoutRef = useRef<number | null>(null);
   const queuedValueRef = useRef<string | null>(null);
 
+  function setEditorValue(nextValue: string) {
+    const editor = textareaRef.current;
+
+    if (editor && editor.value !== nextValue) {
+      editor.value = nextValue;
+    }
+  }
+
   useEffect(() => {
-    contentRef.current = content;
-  }, [content]);
+    wsStatusRef.current = wsStatus;
+  }, [wsStatus]);
 
   useEffect(() => {
     if (!docId) return;
@@ -104,7 +125,9 @@ export default function DocumentEditor() {
         if (isCancelled) return;
 
         setDocument(data);
-        setContent(data.content);
+        contentRef.current = data.content;
+        queuedValueRef.current = null;
+        setEditorValue(data.content);
         setLastVisibleEditAt(Date.now());
       } catch (error) {
         if (isCancelled) return;
@@ -132,46 +155,61 @@ export default function DocumentEditor() {
     connectWebSocket(
       wsUrl,
       (message: WSMessage) => {
-        if (message.type === "DOC_SYNC") {
-          contentRef.current = message.content;
-          setContent(message.content);
-          setDocument((currentDocument) =>
-            currentDocument
-              ? { ...currentDocument, content: message.content }
-              : currentDocument,
-          );
-          setLastVisibleEditAt(Date.now());
-          setSyncState("live");
-          return;
-        }
+        if (message.type === "DOC_SYNC" || message.type === "DOC_UPDATED") {
+          const previousBaseContent = contentRef.current;
+          const nextBaseContent =
+            message.type === "DOC_SYNC"
+              ? message.content
+              : message.content ??
+                applyDiffOperations(previousBaseContent, message.operations);
+          const editor = textareaRef.current;
+          const visibleContent =
+            queuedValueRef.current ?? editor?.value ?? previousBaseContent;
+          const nextVisibleContent =
+            queuedValueRef.current !== null
+              ? rebaseDraftOntoContent(
+                  previousBaseContent,
+                  visibleContent,
+                  nextBaseContent,
+                )
+              : nextBaseContent;
+          const visibleAdjustmentOperations =
+            queuedValueRef.current !== null
+              ? getDiffOperations(visibleContent, nextVisibleContent)
+              : message.type === "DOC_UPDATED"
+                ? message.operations
+                : getDiffOperations(visibleContent, nextBaseContent);
 
-        if (message.type === "DOC_UPDATED") {
-          const updated = applyDiffOperations(
-            contentRef.current,
-            message.operations,
-          );
-          const el = textareaRef.current;
-          const cursorPos = el?.selectionStart || 0;
-          const nextCursorPos = getSelectionAfterOperations(
-            cursorPos,
-            message.operations,
+          const selectionStart = editor?.selectionStart ?? nextVisibleContent.length;
+          const nextSelectionStart = getSelectionAfterOperations(
+            selectionStart,
+            visibleAdjustmentOperations,
           );
 
-          isRemoteUpdate.current = true;
-          contentRef.current = updated;
-          setContent(updated);
-          setDocument((currentDocument) =>
-            currentDocument
-              ? { ...currentDocument, content: updated }
-              : currentDocument,
-          );
+          contentRef.current = nextBaseContent;
+          setEditorValue(nextVisibleContent);
+
+          if (queuedValueRef.current !== null) {
+            queuedValueRef.current = nextVisibleContent;
+          }
+
           setLastVisibleEditAt(Date.now());
-          setSyncState("live");
+          setSyncState((currentState) => {
+            if (wsStatusRef.current !== "connected") {
+              return "offline";
+            }
+
+            if (queuedValueRef.current) {
+              return currentState === "ready" ? "live" : currentState;
+            }
+
+            return "live";
+          });
 
           requestAnimationFrame(() => {
-            if (el) {
-              el.selectionStart = nextCursorPos;
-              el.selectionEnd = nextCursorPos;
+            if (editor) {
+              editor.selectionStart = nextSelectionStart;
+              editor.selectionEnd = nextSelectionStart;
             }
           });
           return;
@@ -217,7 +255,7 @@ export default function DocumentEditor() {
 
     const timeout = window.setTimeout(() => {
       if (!queuedValueRef.current) {
-        setSyncState(wsStatus === "connected" ? "live" : "offline");
+        setSyncState(wsStatusRef.current === "connected" ? "live" : "offline");
       }
     }, 180);
 
@@ -239,18 +277,19 @@ export default function DocumentEditor() {
     const operations = getDiffOperations(contentRef.current, nextValue);
 
     if (operations.length === 0) {
-      setSyncState(wsStatus === "connected" ? "live" : "offline");
+      setSyncState(wsStatusRef.current === "connected" ? "live" : "offline");
       return;
     }
 
     contentRef.current = nextValue;
     lastSentRef.current = Date.now();
     setLastVisibleEditAt(lastSentRef.current);
-    setSyncState(wsStatus === "connected" ? "syncing" : "offline");
+    setSyncState(wsStatusRef.current === "connected" ? "syncing" : "offline");
 
     sendMessage({
       type: "EDIT_DOC",
       operations,
+      content: nextValue,
     });
   }
 
@@ -259,7 +298,6 @@ export default function DocumentEditor() {
     const elapsed = now - lastSentRef.current;
 
     queuedValueRef.current = nextValue;
-    setSyncState(wsStatus === "connected" ? "syncing" : "offline");
 
     if (flushTimeoutRef.current) {
       window.clearTimeout(flushTimeoutRef.current);
@@ -280,17 +318,6 @@ export default function DocumentEditor() {
   function handleChange(newValue: string) {
     if (newValue.length > 100000) return;
 
-    setContent(newValue);
-    setDocument((currentDocument) =>
-      currentDocument ? { ...currentDocument, content: newValue } : currentDocument,
-    );
-    setLastVisibleEditAt(Date.now());
-
-    if (isRemoteUpdate.current) {
-      isRemoteUpdate.current = false;
-      return;
-    }
-
     queueLiveSync(newValue);
   }
 
@@ -305,8 +332,8 @@ export default function DocumentEditor() {
 
     if (syncState === "syncing" || wsStatus === "connecting") {
       return {
-        label: "Syncing live",
-        detail: "Your edits are being pushed instantly to collaborators.",
+        label: "Syncing",
+        detail: "Changes are streaming in the background without interrupting your flow.",
         tone: "text-amber-600 bg-amber-50 border-amber-100",
       };
     }
@@ -353,7 +380,7 @@ export default function DocumentEditor() {
 
         <div className="flex flex-col items-start gap-3 lg:items-end">
           <div
-            className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-medium ${statusMeta.tone}`}
+            className={`inline-flex min-h-9 items-center gap-2 rounded-full border px-3 py-1 text-sm font-medium ${statusMeta.tone}`}
           >
             <span className="text-base leading-none">●</span>
             {statusMeta.label}
@@ -393,7 +420,7 @@ export default function DocumentEditor() {
 
         <div className="rounded-full bg-violet-50 px-3 py-1 text-xs font-medium text-violet-600">
           {wsStatus === "connected"
-            ? "Collaborators update instantly as you type"
+            ? "Connection stays live while sync happens quietly in the background"
             : "Reconnecting live session…"}
         </div>
       </div>
@@ -401,7 +428,7 @@ export default function DocumentEditor() {
       <div className="overflow-hidden rounded-[28px] border border-violet-100 bg-white shadow-[0_24px_60px_rgba(124,58,237,0.12)] transition-shadow duration-300 focus-within:shadow-[0_28px_70px_rgba(236,72,153,0.16)]">
         <textarea
           ref={textareaRef}
-          value={content}
+          defaultValue=""
           onChange={(e) => handleChange(e.target.value)}
           className="min-h-[540px] w-full resize-y border-0 bg-transparent p-6 text-lg leading-8 text-violet-950 focus:outline-none focus:ring-0"
           placeholder="Start typing..."
@@ -413,7 +440,7 @@ export default function DocumentEditor() {
         <span>
           {syncState === "offline"
             ? "Edits are kept locally until the live connection returns"
-            : "Document stays synced across every open screen in real time"}
+            : "Live status stays steady while your document keeps syncing in real time"}
         </span>
       </div>
     </div>
