@@ -6,78 +6,63 @@ import MembersModal from "./MembersModal"
 import InviteModal from "./InviteModal"
 
 import type { Workspace } from "../types/workspace"
+import { WorkspaceHeaderSkeleton } from "./ui/Skeleton"
 
 export default function WorkspaceHeader() {
-
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
 
   const [workspace, setWorkspace] = useState<Workspace | null>(null)
+  const [loading, setLoading] = useState(true)
 
   const [showMembers, setShowMembers] = useState(false)
   const [showInvite, setShowInvite] = useState(false)
 
   useEffect(() => {
-    loadWorkspace()
+    void loadWorkspace()
   }, [id])
 
   async function loadWorkspace() {
+    setLoading(true)
 
     try {
-
       const list: Workspace[] = await getWorkspaces()
+      const ws = list.find((item) => String(item.id) === id)
 
-      const ws = list.find(w => String(w.id) === id)
-
-      if (ws) setWorkspace(ws)
-
+      if (ws) {
+        setWorkspace(ws)
+      }
     } catch (err) {
-
       console.error("Failed to load workspace", err)
-
+    } finally {
+      setLoading(false)
     }
-
   }
 
-  if (!workspace) {
-    return (
-      <div className="border-b border-violet-100 bg-white px-6 py-4 text-violet-600">
-        Loading workspace...
-      </div>
-    )
+  if (loading || !workspace) {
+    return <WorkspaceHeaderSkeleton />
   }
 
   return (
-
-    <div className="border-b border-violet-100 bg-white/95 px-6 py-4 flex items-center justify-between">
-
+    <div className="flex items-center justify-between border-b border-violet-100 bg-white/95 px-6 py-4">
       <div className="flex items-center gap-3">
-
         <h1 className="title-font text-2xl font-semibold text-violet-900">
           {workspace.name}
         </h1>
 
         {workspace.role && (
-          <span className="text-xs px-2.5 py-1 bg-pink-100 border border-pink-200 text-pink-700 rounded-full capitalize">
+          <span className="rounded-full border border-pink-200 bg-pink-100 px-2.5 py-1 text-xs capitalize text-pink-700">
             {workspace.role}
           </span>
         )}
-
       </div>
 
       <div className="flex items-center gap-3">
-
-        <button
-          onClick={() => setShowMembers(true)}
-          className="btn-secondary text-sm"
-        >
+        <button onClick={() => setShowMembers(true)} className="btn-secondary text-sm">
           Members
         </button>
 
-        <button
-          onClick={() => setShowInvite(true)}
-          className="btn-secondary text-sm"
-        >
+        <button onClick={() => setShowInvite(true)} className="btn-secondary text-sm">
           Invite
         </button>
 
@@ -87,25 +72,15 @@ export default function WorkspaceHeader() {
         >
           Exit
         </button>
-
       </div>
 
       {showMembers && id && (
-        <MembersModal
-          workspaceId={id}
-          onClose={() => setShowMembers(false)}
-        />
+        <MembersModal workspaceId={id} onClose={() => setShowMembers(false)} />
       )}
 
       {showInvite && id && (
-        <InviteModal
-          workspaceId={id}
-          onClose={() => setShowInvite(false)}
-        />
+        <InviteModal workspaceId={id} onClose={() => setShowInvite(false)} />
       )}
-
     </div>
-
   )
-
 }

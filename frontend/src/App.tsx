@@ -1,10 +1,18 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import { useAuth } from "./auth/AuthContext"
-import { Suspense, lazy} from "react"
+import { Suspense, lazy } from "react"
 
 import ProtectedRoute from "./components/ProtectedRoute"
 import Layout from "./components/Layouts/Layout"
 import WorkspaceLayout from "./components/Layouts/WorkspaceLayout"
+import {
+  AuthFormSkeleton,
+  DashboardSkeleton,
+  EditorSkeleton,
+  PageSkeleton,
+  SidebarSkeleton,
+  WorkspaceHeaderSkeleton,
+} from "./components/ui/Skeleton"
 
 const Home = lazy(() => import("./pages/Home"))
 const Login = lazy(() => import("./pages/Login"))
@@ -14,28 +22,49 @@ const WorkspacePage = lazy(() => import("./pages/WorkspacePage"))
 const DocumentEditor = lazy(() => import("./pages/DocumentEditor"))
 const NotFound = lazy(() => import("./pages/NotFound"))
 
-export default function App() {
+function WorkspaceRouteSkeleton() {
+  return (
+    <PageSkeleton
+      sidebar={<SidebarSkeleton />}
+      header={<WorkspaceHeaderSkeleton />}
+    >
+      <EditorSkeleton />
+    </PageSkeleton>
+  )
+}
 
+export default function App() {
   const { user } = useAuth()
 
   return (
-
     <BrowserRouter>
-
-      <Suspense fallback={<div className="min-h-screen grid place-items-center text-violet-700">Loading...</div>}>
-
       <Routes>
-
-        {/* Root */}
         <Route
           path="/"
-          element={user ? <Navigate to="/workspaces" /> : <Home />}
+          element={
+            <Suspense fallback={<div className="min-h-screen bg-white" />}>
+              {user ? <Navigate to="/workspaces" /> : <Home />}
+            </Suspense>
+          }
         />
 
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route
+          path="/login"
+          element={
+            <Suspense fallback={<AuthFormSkeleton />}>
+              <Login />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <Suspense fallback={<AuthFormSkeleton />}>
+              <Register />
+            </Suspense>
+          }
+        />
 
-        {/* Dashboard Layout */}
         <Route
           element={
             <ProtectedRoute>
@@ -43,37 +72,45 @@ export default function App() {
             </ProtectedRoute>
           }
         >
+          <Route
+            path="/workspaces"
+            element={
+              <Suspense fallback={<DashboardSkeleton />}>
+                <Workspaces />
+              </Suspense>
+            }
+          />
 
-          {/* Workspaces dashboard */}
-          <Route path="/workspaces" element={<Workspaces />} />
-
-
-          {/* Workspace Layout */}
           <Route path="/workspace/:id" element={<WorkspaceLayout />}>
-
-            {/* Workspace home */}
-            <Route index element={<WorkspacePage />} />
-
-            {/* Document editor */}
             <Route
-              path="document/:docId"
-              element={<DocumentEditor />}
+              index
+              element={
+                <Suspense fallback={<WorkspaceRouteSkeleton />}>
+                  <WorkspacePage />
+                </Suspense>
+              }
             />
 
+            <Route
+              path="document/:docId"
+              element={
+                <Suspense fallback={<WorkspaceRouteSkeleton />}>
+                  <DocumentEditor />
+                </Suspense>
+              }
+            />
           </Route>
-
         </Route>
 
-
-        {/* Not found */}
-        <Route path="*" element={<NotFound />} />
-
+        <Route
+          path="*"
+          element={
+            <Suspense fallback={<div className="min-h-screen bg-white" />}>
+              <NotFound />
+            </Suspense>
+          }
+        />
       </Routes>
-
-      </Suspense>
-
     </BrowserRouter>
-
   )
-
 }

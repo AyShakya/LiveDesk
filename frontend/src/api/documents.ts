@@ -23,6 +23,24 @@ export async function updateDocument(docId: string, data: { title?: string; cont
   return res.data
 }
 
+export function persistDocumentOnExit(docId: string, content: string) {
+  const token = localStorage.getItem("token")
+
+  if (!token || !import.meta.env.VITE_API_URL) {
+    return
+  }
+
+  void fetch(`${import.meta.env.VITE_API_URL}/documents/${docId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ content }),
+    keepalive: true,
+  })
+}
+
 export async function deleteDocument(docId: string) {
   await http.delete(`/documents/${docId}`)
 }
