@@ -48,18 +48,17 @@ export async function handleDocEdit(ws, message) {
   doc.dirty = true;
   documentCache.set(ws.docId, doc);
 
-  broadcastLocalDoc(ws.workspaceId, ws.docId, {
+  const event = {
     type: "DOC_UPDATED",
     workspaceId: ws.workspaceId,
     docId: ws.docId,
     operations,
     updatedBy: ws.userId,
+    sourceInstance: ws.serverInstanceId,
+  };
+
+  broadcastLocalDoc(ws.workspaceId, ws.docId, event, {
+    excludeUserId: ws.userId,
   });
-  publishDocumentEvent({
-    type: "DOC_UPDATED",
-    workspaceId: ws.workspaceId,
-    docId: ws.docId,
-    operations,
-    updatedBy: ws.userId,
-  });
+  publishDocumentEvent(event);
 }

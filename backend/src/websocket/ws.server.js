@@ -41,7 +41,7 @@ function isValidOperations(operation) {
   return false;
 }
 
-export function broadcastLocalDoc(workspaceId, docId, message) {
+export function broadcastLocalDoc(workspaceId, docId, message, options = {}) {
   const docs = workspaceDocs.get(String(workspaceId));
   if (!docs) return;
 
@@ -49,7 +49,7 @@ export function broadcastLocalDoc(workspaceId, docId, message) {
   if (!sockets) return;
 
   for (const ws of sockets) {
-    if(urlToHttpOptions.exclcudeUserId !== undefined && String(ws.userId) === String(options.exclcudeUserId)){
+    if (options.excludeUserId !== undefined && String(ws.userId) === String(options.excludeUserId)) {
       continue;
     }
     if (ws.readyState === ws.OPEN) {
@@ -233,7 +233,7 @@ export function initWebSocket(server) {
       if (!sockets) return;
 
       for (const ws of sockets) {
-        if(options.exclcudeUserId !== undefined && String(ws.userId) === String(options.exclcudeUserId)) continue;
+        if (options.excludeUserId !== undefined && String(ws.userId) === String(options.excludeUserId)) continue;
         if (ws.readyState === ws.OPEN) {
           ws.send(JSON.stringify(message));
         }
