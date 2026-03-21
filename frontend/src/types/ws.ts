@@ -1,4 +1,5 @@
 import type { DiffOperation } from "../utils/diff"
+
 export type PresenceUser = {
   id: string
   email: string
@@ -14,6 +15,7 @@ export type DocumentUpdateMessage = {
   docId: string
   operations: DiffOperation[]
   updatedBy: string
+  content?: string
 }
 
 export type DocumentSyncMessage = {
