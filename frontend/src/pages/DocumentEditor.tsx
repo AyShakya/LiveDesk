@@ -166,6 +166,15 @@ export default function DocumentEditor() {
 
     let isCancelled = false;
 
+    setLoading(true);
+    setDocRecord(null);
+    setOnlineUsers([]);
+    setLastVisibleEditAt(null);
+    contentRef.current = "";
+    saveOnExitRef.current = null;
+    queuedValueRef.current = null;
+    setEditorValue("");
+
     async function load() {
       try {
         const data = await getDocument(docId as string);
