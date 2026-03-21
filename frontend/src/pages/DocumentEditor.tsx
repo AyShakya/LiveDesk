@@ -301,7 +301,7 @@ export default function DocumentEditor() {
       }
 
       saveOnExitRef.current = latestValue;
-      persistDocumentOnExit(docId, latestValue);
+      persistDocumentOnExit(docId as string, latestValue);
     }
 
     const handleBeforeUnload = () => {
