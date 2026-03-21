@@ -1,4 +1,5 @@
 import { createDocument, getDocument, listDocuments, updateDocument } from "./document.repo.js";
+import { getCachedDocument } from "../../websocket/cacheModule.js";
 import {
   deleteDocument as repoDeleteDocument,
   isWorkspaceMember as repoIsWorkspaceMember,
@@ -41,6 +42,15 @@ export async function getDoc({docId, userId}){
     if(!allowed){
         throw new Error('FORBIDDEN');
     }
+    const cachedDocument = getCachedDocument(docId);
+
+    if (cachedDocument) {
+        return {
+            ...doc,
+            content: cachedDocument.content,
+        };
+    }
+
     return doc;
 }
 

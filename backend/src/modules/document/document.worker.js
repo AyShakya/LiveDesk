@@ -1,5 +1,4 @@
-import pool from "../../config/postgres.js";
-import { documentCache } from "../../websocket/cacheModule.js";
+import { documentCache, flushAndDeleteCachedDocument, flushCachedDocument } from "../../websocket/cacheModule.js";
 
 export function startDocumentWorkers() {
   setInterval(() => {
@@ -8,7 +7,9 @@ export function startDocumentWorkers() {
 
     for (const [docId, doc] of documentCache) {
       if (now - doc.lastAccess > IDLE_LIMIT) {
-        documentCache.delete(docId);
+        void flushAndDeleteCachedDocument(docId).catch((err) => {
+          console.error("Failed to flush idle document", err);
+        });
       }
     }
   }, 600000);
@@ -20,14 +21,7 @@ export function startDocumentWorkers() {
       if (!doc.dirty) continue;
 
       try {
-        await pool.query(
-          `UPDATE documents
-         SET content=$1, updated_at=NOW()
-         WHERE id=$2`,
-          [doc.content, docId],
-        );
-
-        doc.dirty = false;
+        await flushCachedDocument(docId);
 
         processed++;
 

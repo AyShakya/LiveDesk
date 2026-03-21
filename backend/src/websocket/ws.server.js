@@ -6,7 +6,7 @@ import {
   getDocument,
   isWorkspaceMember,
 } from "../modules/document/document.repo.js";
-import { documentCache } from "./cacheModule.js";
+import { documentCache, flushAndDeleteCachedDocument } from "./cacheModule.js";
 
 const workspaceDocs = new Map();
 export const WS_SERVER_INSTANCE_ID = `ws-${process.pid}`;
@@ -192,7 +192,11 @@ export function initWebSocket(server) {
 
         if (docSockets?.size === 0) {
           docs.delete(docId);
-          documentCache.delete(docId);
+          try {
+            await flushAndDeleteCachedDocument(docId);
+          } catch (err) {
+            console.error("Failed to flush document on disconnect:", err);
+          }
         }
 
         if (docs.size === 0) {
