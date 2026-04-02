@@ -29,9 +29,9 @@ export default function MembersModal({ workspaceId, onClose }: Props) {
 
   return (
 
-    <div className="fixed inset-0 bg-violet-950/20 flex items-center justify-center z-50 px-4">
+    <div className="fixed inset-0 z-50 flex justify-center overflow-y-auto bg-violet-950/20 p-4 sm:items-center">
 
-      <div className="glass-card w-[520px] max-h-[70vh] flex flex-col">
+      <div className="glass-card flex max-h-[calc(100dvh-2rem)] w-full max-w-[520px] flex-col overflow-hidden">
 
         <div className="px-6 py-4 border-b border-violet-100 flex justify-between items-center">
 

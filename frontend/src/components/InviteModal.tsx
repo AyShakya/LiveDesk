@@ -22,7 +22,7 @@ export default function InviteModal({ workspaceId, onClose }: Props) {
 
   if (!workspace) {
     return (
-      <div className="fixed inset-0 bg-violet-950/20 flex items-center justify-center">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-violet-950/20 px-4">
         <div className="glass-card p-6">
           Loading invite...
         </div>
@@ -43,9 +43,9 @@ export default function InviteModal({ workspaceId, onClose }: Props) {
 
   return (
 
-    <div className="fixed inset-0 bg-violet-950/20 flex items-center justify-center z-50 px-4">
+    <div className="fixed inset-0 z-50 flex justify-center overflow-y-auto bg-violet-950/20 p-4 sm:items-center">
 
-      <div className="glass-card w-[520px] max-w-full">
+      <div className="glass-card w-full max-w-[520px] max-h-[calc(100dvh-2rem)] overflow-auto">
 
         <div className="px-6 py-4 border-b border-violet-100 flex justify-between items-center">
 
@@ -67,7 +67,7 @@ export default function InviteModal({ workspaceId, onClose }: Props) {
               Invite Code
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row">
 
               <div className="flex-1 border border-violet-200 rounded-xl px-3 py-2 font-mono bg-white">
                 {workspace.inviteCode}
@@ -90,9 +90,9 @@ export default function InviteModal({ workspaceId, onClose }: Props) {
               Invite Link
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row">
 
-              <div className="flex-1 border border-violet-200 rounded-xl px-3 py-2 text-sm truncate bg-white">
+              <div className="flex-1 break-all border border-violet-200 rounded-xl bg-white px-3 py-2 text-sm">
                 {inviteLink}
               </div>
 
