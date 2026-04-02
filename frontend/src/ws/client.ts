@@ -1,86 +1,154 @@
-// src/ws/client.ts
 let socket: WebSocket | null = null;
 let reconnectTimeout: number | null = null;
 
 let manuallyClosed = false;
 let retryCount = 0;
-const maxRetries = 12;
+const maxRetries = 14;
 
 let currentUrl: string | null = null;
 let messageQueue: string[] = [];
+const MAX_QUEUED_MESSAGES = 200;
+
+let activeMessageHandler: MessageHandler | null = null;
+let activeStatusHandler: StatusHandler | null = null;
+
+export type ConnectionStatus = "connecting" | "connected" | "disconnected";
+
+export type ConnectionStatusMeta = {
+  status: ConnectionStatus;
+  retryAttempt: number;
+  nextRetryInMs?: number;
+  reason?: "closed" | "error" | "offline" | "max-retries";
+};
 
 type MessageHandler = (data: any) => void;
-type StatusHandler = (status: "connecting" | "connected" | "disconnected") => void;
+type StatusHandler = (meta: ConnectionStatusMeta) => void;
 
 let pingInterval: number | null = null;
+
+function emitStatus(meta: ConnectionStatusMeta) {
+  activeStatusHandler?.(meta);
+}
+
+function getReconnectDelay(attempt: number) {
+  const base = Math.min(500 * 2 ** Math.min(attempt, 6), 12000);
+  const jitter = Math.floor(Math.random() * 300);
+  return base + jitter;
+}
+
+function scheduleReconnect(connectFn: () => void, reason: ConnectionStatusMeta["reason"] = "closed") {
+  if (manuallyClosed || retryCount >= maxRetries) {
+    emitStatus({
+      status: "disconnected",
+      retryAttempt: retryCount,
+      reason: "max-retries",
+    });
+    return;
+  }
+
+  const delay = getReconnectDelay(retryCount);
+  emitStatus({
+    status: "disconnected",
+    retryAttempt: retryCount,
+    nextRetryInMs: delay,
+    reason,
+  });
+
+  if (reconnectTimeout) {
+    clearTimeout(reconnectTimeout);
+  }
+
+  reconnectTimeout = window.setTimeout(connectFn, delay);
+}
+
+function cleanupTimers() {
+  if (reconnectTimeout) {
+    clearTimeout(reconnectTimeout);
+    reconnectTimeout = null;
+  }
+
+  if (pingInterval) {
+    clearInterval(pingInterval);
+    pingInterval = null;
+  }
+}
+
+function flushQueue() {
+  while (messageQueue.length > 0 && socket && socket.readyState === WebSocket.OPEN) {
+    socket.send(messageQueue.shift()!);
+  }
+}
 
 export function connectWebSocket(
   url: string,
   onMessage: MessageHandler,
-  onStatusChange?: StatusHandler
+  onStatusChange?: StatusHandler,
 ) {
-  // If already connected to same url, do nothing
   if (currentUrl === url && socket && socket.readyState === WebSocket.OPEN) {
     return;
   }
 
-  // If switching urls, close existing socket but don't mark manual close
   disconnectWebSocket(false);
   messageQueue = [];
 
   currentUrl = url;
   manuallyClosed = false;
+  activeMessageHandler = onMessage;
+  activeStatusHandler = onStatusChange ?? null;
 
-  function connect() {
-    if (retryCount >= maxRetries) {
-      console.error("Max WebSocket retries reached");
-      onStatusChange?.("disconnected");
+  const connect = () => {
+    if (manuallyClosed) {
       return;
     }
 
-    onStatusChange?.("connecting");
+    if (typeof navigator !== "undefined" && navigator.onLine === false) {
+      retryCount++;
+      scheduleReconnect(connect, "offline");
+      return;
+    }
+
+    emitStatus({ status: "connecting", retryAttempt: retryCount });
 
     try {
       socket = new WebSocket(url);
-    } catch (err) {
-      // immediate failure; schedule reconnect
-      scheduleReconnect();
+    } catch {
+      retryCount++;
+      scheduleReconnect(connect, "error");
       return;
     }
 
     socket.onopen = () => {
       retryCount = 0;
-      onStatusChange?.("connected");
-      console.log("WebSocket connected to", url);
+      emitStatus({ status: "connected", retryAttempt: retryCount });
+      flushQueue();
 
-      // flush queued messages
-      while (messageQueue.length > 0 && socket && socket.readyState === WebSocket.OPEN) {
-        socket.send(messageQueue.shift()!);
+      if (pingInterval) {
+        clearInterval(pingInterval);
       }
 
-      // start ping/pong to keep connection alive (server should reply if needed)
-      if (pingInterval) clearInterval(pingInterval);
       pingInterval = window.setInterval(() => {
-        try {
-          if (socket && socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: "PING" }));
-        } catch {}
-      }, 20000); // every 20s
+        if (socket && socket.readyState === WebSocket.OPEN) {
+          socket.send(JSON.stringify({ type: "PING" }));
+        }
+      }, 20000);
     };
 
     socket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        // ignore PONG if you implement PONG from server
         if (data?.type === "PONG") return;
-        onMessage(data);
-      } catch (e) {
-        console.error("Invalid WS message", e);
+        activeMessageHandler?.(data);
+      } catch (error) {
+        console.error("Invalid WS message", error);
       }
     };
 
-    socket.onerror = (err) => {
-      console.warn("WebSocket error", err);
-      // socket will likely close; rely on onclose to schedule reconnect
+    socket.onerror = () => {
+      emitStatus({
+        status: "disconnected",
+        retryAttempt: retryCount,
+        reason: "error",
+      });
     };
 
     socket.onclose = () => {
@@ -89,47 +157,57 @@ export function connectWebSocket(
         pingInterval = null;
       }
 
-      // If we closed intentionally, stop trying
       if (manuallyClosed) {
-        onStatusChange?.("disconnected");
+        emitStatus({ status: "disconnected", retryAttempt: retryCount, reason: "closed" });
         return;
       }
 
-      onStatusChange?.("disconnected");
-
-      // schedule reconnect with exp backoff (fast initial retries)
       retryCount++;
-      scheduleReconnect();
+      scheduleReconnect(connect, "closed");
     };
-  }
+  };
 
-  function scheduleReconnect() {
-    const delay = Math.min(300 * 2 ** Math.min(retryCount, 6), 5000); // 300ms -> 600ms -> ... cap 5s
-    console.log(`WS reconnect in ${delay}ms (attempt ${retryCount})`);
-    if (reconnectTimeout) clearTimeout(reconnectTimeout);
-    reconnectTimeout = window.setTimeout(connect, delay);
-  }
+  const handleNetworkOnline = () => {
+    if (!manuallyClosed && (!socket || socket.readyState === WebSocket.CLOSED)) {
+      retryCount = 0;
+      if (reconnectTimeout) {
+        clearTimeout(reconnectTimeout);
+        reconnectTimeout = null;
+      }
+      connect();
+    }
+  };
+
+  window.addEventListener("online", handleNetworkOnline);
 
   connect();
+
+  return () => {
+    window.removeEventListener("online", handleNetworkOnline);
+  };
 }
 
 export function sendMessage(payload: any) {
   const message = JSON.stringify(payload);
+
   if (socket && socket.readyState === WebSocket.OPEN) {
     socket.send(message);
-  } else {
-    // queue message until socket opens
-    messageQueue.push(message);
+    return;
+  }
+
+  messageQueue.push(message);
+
+  if (messageQueue.length > MAX_QUEUED_MESSAGES) {
+    messageQueue = messageQueue.slice(messageQueue.length - MAX_QUEUED_MESSAGES);
   }
 }
 
 export function disconnectWebSocket(manual = true) {
-  if (manual) manuallyClosed = true;
-
-  if (reconnectTimeout) {
-    clearTimeout(reconnectTimeout);
-    reconnectTimeout = null;
+  if (manual) {
+    manuallyClosed = true;
   }
+
+  cleanupTimers();
 
   if (socket) {
     try {
@@ -138,14 +216,14 @@ export function disconnectWebSocket(manual = true) {
       socket.onmessage = null;
       socket.onopen = null;
       socket.close();
-    } catch {}
+    } catch {
+      // no-op
+    }
     socket = null;
   }
 
   currentUrl = null;
-  if (manual) messageQueue = [];
-  if (pingInterval) {
-    clearInterval(pingInterval);
-    pingInterval = null;
+  if (manual) {
+    messageQueue = [];
   }
 }
