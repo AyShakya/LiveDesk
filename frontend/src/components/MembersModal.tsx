@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { createPortal } from "react-dom"
 import { getWorkspaceMembers } from "../api/workspaces"
 import type { Member } from "../types/member"
 
@@ -16,6 +17,18 @@ export default function MembersModal({ workspaceId, onClose }: Props) {
     load()
   }, [])
 
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose()
+      }
+    }
+
+    window.addEventListener("keydown", onKeyDown)
+
+    return () => window.removeEventListener("keydown", onKeyDown)
+  }, [onClose])
+
   async function load() {
     try {
       const data = await getWorkspaceMembers(workspaceId)
@@ -27,11 +40,15 @@ export default function MembersModal({ workspaceId, onClose }: Props) {
     }
   }
 
-  return (
-
-    <div className="fixed inset-0 z-50 flex justify-center overflow-y-auto bg-violet-950/20 p-4 sm:items-center">
-
-      <div className="glass-card flex max-h-[calc(100dvh-2rem)] w-full max-w-[520px] flex-col overflow-hidden">
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[90] flex justify-center overflow-y-auto bg-violet-950/30 p-4 backdrop-blur-sm sm:items-center"
+      onClick={onClose}
+    >
+      <div
+        className="glass-card flex max-h-[calc(100dvh-2rem)] w-full max-w-[560px] flex-col overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
 
         <div className="px-6 py-4 border-b border-violet-100 flex justify-between items-center">
 
@@ -97,8 +114,7 @@ export default function MembersModal({ workspaceId, onClose }: Props) {
 
       </div>
 
-    </div>
-
+    </div>,
+    document.body,
   )
-
 }

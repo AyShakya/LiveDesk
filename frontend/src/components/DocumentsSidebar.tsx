@@ -80,13 +80,13 @@ export default function DocumentsSidebar({ workspaceId, className, onNavigate }:
         className,
       )}
     >
-      <div className="border-b border-violet-100 px-6 py-4">
+      <div className="border-b border-violet-100 px-5 py-4">
         <h2 className="title-font text-xl font-semibold text-violet-900">
           Documents
         </h2>
       </div>
 
-      <div className="flex-1 overflow-auto p-3 space-y-2">
+      <div className="flex-1 space-y-2 overflow-auto p-3">
         {documents.length === 0 && (
           <div className="rounded-xl border border-dashed border-violet-200 bg-violet-50/70 p-4 text-sm text-violet-600">
             No documents yet. Create your first document to start collaborating.
@@ -126,7 +126,7 @@ export default function DocumentsSidebar({ workspaceId, className, onNavigate }:
         })}
       </div>
 
-      <div className="border-t border-violet-100 p-4">
+      <div className="border-t border-violet-100 bg-white/90 p-4">
         <input
           className="input mb-3"
           placeholder="New document..."

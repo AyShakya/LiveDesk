@@ -10,7 +10,7 @@ export default function WorkspaceLayout() {
   if (!id) return null
 
   return (
-    <div className="flex h-full min-h-screen bg-gradient-to-br from-violet-50/50 via-white to-pink-50/40">
+    <div className="flex h-full min-h-screen overflow-hidden bg-gradient-to-br from-violet-50/50 via-white to-pink-50/40">
       <DocumentsSidebar workspaceId={id} className="hidden lg:flex" />
 
       {isSidebarOpen && (
@@ -29,7 +29,7 @@ export default function WorkspaceLayout() {
         </div>
       )}
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <WorkspaceHeader
           onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
           isSidebarOpen={isSidebarOpen}
