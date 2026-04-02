@@ -135,6 +135,7 @@ export default function DocumentEditor() {
     "ready",
   );
   const [lastVisibleEditAt, setLastVisibleEditAt] = useState<number | null>(null);
+  const [isMembersPanelOpen, setIsMembersPanelOpen] = useState(false);
 
   const isSyncedWithWSRef = useRef(false);
   const lastSentRef = useRef(0);
@@ -147,6 +148,7 @@ export default function DocumentEditor() {
   const flushTimeoutRef = useRef<number | null>(null);
   const queuedValueRef = useRef<string | null>(null);
   const saveOnExitRef = useRef<string | null>(null);
+  const hasLoadedDocumentRef = useRef(false);
 
   function setEditorValue(nextValue: string) {
     const editor = textareaRef.current;
@@ -174,6 +176,17 @@ export default function DocumentEditor() {
     if (!docId) return;
 
     let isCancelled = false;
+    const isInitialLoad = !hasLoadedDocumentRef.current;
+
+    isSyncedWithWSRef.current = false;
+    setOnlineUsers([]);
+    setSyncState("ready");
+    setRetryAttempt(0);
+    setRetryInMs(null);
+
+    if (isInitialLoad) {
+      setLoading(true);
+    }
 
     async function load() {
       try {
@@ -182,6 +195,7 @@ export default function DocumentEditor() {
         if (isCancelled) return;
 
         setDocRecord(data);
+        hasLoadedDocumentRef.current = true;
         
         if (!isSyncedWithWSRef.current) {
           contentRef.current = data.content;
@@ -526,6 +540,40 @@ export default function DocumentEditor() {
               </div>
               <div>{statusMeta.detail}</div>
             </div>
+          </div>
+
+          <div className="w-full max-w-sm rounded-2xl border border-violet-100 bg-white/80 p-2">
+            <button
+              type="button"
+              onClick={() => setIsMembersPanelOpen((prev) => !prev)}
+              className="flex w-full items-center justify-between rounded-xl px-2 py-1.5 text-left text-xs font-semibold text-violet-700 transition hover:bg-violet-50"
+            >
+              <span>
+                Active members in this document ({onlineUsers.length})
+              </span>
+              <span className="text-violet-500">
+                {isMembersPanelOpen ? "Hide" : "Show"}
+              </span>
+            </button>
+
+            {isMembersPanelOpen && (
+              <ul className="mt-2 max-h-48 space-y-1 overflow-auto px-1 pb-1">
+                {onlineUsers.length === 0 ? (
+                  <li className="rounded-lg bg-violet-50 px-2 py-1.5 text-xs text-violet-500">
+                    No other active members in this document right now.
+                  </li>
+                ) : (
+                  onlineUsers.map((user) => (
+                    <li
+                      key={`member-${user.id}`}
+                      className="rounded-lg bg-violet-50 px-2 py-1.5 text-xs text-violet-700"
+                    >
+                      {user.email}
+                    </li>
+                  ))
+                )}
+              </ul>
+            )}
           </div>
         </div>
       </div>
