@@ -129,6 +129,8 @@ export default function DocumentEditor() {
   const [wsStatus, setWsStatus] = useState<
     "connecting" | "connected" | "disconnected"
   >("connecting");
+  const [retryAttempt, setRetryAttempt] = useState(0);
+  const [retryInMs, setRetryInMs] = useState<number | null>(null);
   const [syncState, setSyncState] = useState<"ready" | "live" | "offline">(
     "ready",
   );
@@ -210,7 +212,7 @@ export default function DocumentEditor() {
     const token = localStorage.getItem("token");
     const wsUrl = `${import.meta.env.VITE_WS_URL}?token=${token}&workspaceId=${id}&docId=${docId}`;
 
-    connectWebSocket(
+    const unsubscribeNetworkListener = connectWebSocket(
       wsUrl,
       (message: WSMessage) => {
         if (message.type === "DOC_SYNC" || message.type === "DOC_UPDATED") {
@@ -273,14 +275,17 @@ export default function DocumentEditor() {
           setOnlineUsers(message.users || []);
         }
       },
-      (status) => {
-        setWsStatus(status);
+      (meta) => {
+        setWsStatus(meta.status);
+        setRetryAttempt(meta.retryAttempt);
+        setRetryInMs(meta.nextRetryInMs ?? null);
+
         setSyncState((currentState) => {
-          if (status === "disconnected") {
+          if (meta.status === "disconnected") {
             return "offline";
           }
 
-          if (status === "connected") {
+          if (meta.status === "connected") {
             return currentState === "ready" && !hasQueuedChanges() ? "ready" : "live";
           }
 
@@ -290,6 +295,7 @@ export default function DocumentEditor() {
     );
 
     return () => {
+      unsubscribeNetworkListener?.();
       disconnectWebSocket();
 
       if (flushTimeoutRef.current) {
@@ -439,7 +445,10 @@ export default function DocumentEditor() {
     if (syncState === "offline") {
       return {
         label: "Offline",
-        detail: "Live updates will resume automatically when the connection is back.",
+        detail:
+          retryInMs && retryAttempt > 0
+            ? `Retrying automatically (attempt ${retryAttempt}) in ${Math.ceil(retryInMs / 1000)}s.`
+            : "Live updates will resume automatically when the connection is back.",
         tone: "text-rose-600 bg-rose-50 border-rose-100",
       };
     }
@@ -465,7 +474,7 @@ export default function DocumentEditor() {
       detail: "Start typing to collaborate in real time.",
       tone: "text-violet-700 bg-violet-50 border-violet-100",
     };
-  }, [syncState, wsStatus]);
+  }, [retryAttempt, retryInMs, syncState, wsStatus]);
 
   if (loading) {
     return <EditorSkeleton />;

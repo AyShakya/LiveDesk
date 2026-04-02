@@ -12,6 +12,11 @@ const workspaceDocs = new Map();
 export const WS_SERVER_INSTANCE_ID = `ws-${process.pid}`;
 
 const ALLOWED_MESSAGE_TYPES = new Set(["EDIT_DOC", "PING"]);
+const HEARTBEAT_INTERVAL_MS = 30000;
+
+function markAlive() {
+  this.isAlive = true;
+}
 
 function isValidOperations(operation) {
   if (!operation || typeof operation !== "object") {
@@ -62,6 +67,22 @@ export function initWebSocket(server) {
   const wss = new WebSocketServer({ server });
 
   console.log("WebSocket server initialized");
+
+  const heartbeatInterval = setInterval(() => {
+    for (const ws of wss.clients) {
+      if (ws.isAlive === false) {
+        ws.terminate();
+        continue;
+      }
+
+      ws.isAlive = false;
+      ws.ping();
+    }
+  }, HEARTBEAT_INTERVAL_MS);
+
+  wss.on("close", () => {
+    clearInterval(heartbeatInterval);
+  });
 
   wss.on("connection", async (ws, req) => {
     try {
@@ -114,6 +135,8 @@ export function initWebSocket(server) {
       ws.workspaceId = workspaceId;
       ws.docId = docId;
       ws.serverInstanceId = WS_SERVER_INSTANCE_ID;
+      ws.isAlive = true;
+      ws.on("pong", markAlive);
 
       console.log(
         `WS connected user=${ws.userId} workspace=${workspaceId} doc=${docId}`,
@@ -182,6 +205,7 @@ export function initWebSocket(server) {
       });
 
       ws.on("close", async () => {
+        ws.off("pong", markAlive);
         console.log(
           `WS disconnected user=${ws.userId} workspace=${workspaceId} doc=${docId}`,
         );
