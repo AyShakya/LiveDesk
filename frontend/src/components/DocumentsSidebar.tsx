@@ -7,9 +7,15 @@ import { SidebarSkeleton } from "./ui/Skeleton"
 
 interface Props {
   workspaceId: string
+  className?: string
+  onNavigate?: () => void
 }
 
-export default function DocumentsSidebar({ workspaceId }: Props) {
+function cx(...classes: Array<string | undefined | false>) {
+  return classes.filter(Boolean).join(" ")
+}
+
+export default function DocumentsSidebar({ workspaceId, className, onNavigate }: Props) {
   const navigate = useNavigate()
   const { docId } = useParams<{ docId?: string }>()
 
@@ -64,11 +70,16 @@ export default function DocumentsSidebar({ workspaceId }: Props) {
   }
 
   if (loading) {
-    return <SidebarSkeleton />
+    return <SidebarSkeleton className={className} />
   }
 
   return (
-    <aside className="flex w-80 flex-col border-r border-violet-100 bg-white/95">
+    <aside
+      className={cx(
+        "flex w-80 shrink-0 flex-col border-r border-violet-100 bg-white/95",
+        className,
+      )}
+    >
       <div className="border-b border-violet-100 px-6 py-4">
         <h2 className="title-font text-xl font-semibold text-violet-900">
           Documents
@@ -76,6 +87,12 @@ export default function DocumentsSidebar({ workspaceId }: Props) {
       </div>
 
       <div className="flex-1 overflow-auto p-3 space-y-2">
+        {documents.length === 0 && (
+          <div className="rounded-xl border border-dashed border-violet-200 bg-violet-50/70 p-4 text-sm text-violet-600">
+            No documents yet. Create your first document to start collaborating.
+          </div>
+        )}
+
         {documents.map((doc: Document) => {
           const active = String(doc.id) === docId
 
@@ -89,7 +106,10 @@ export default function DocumentsSidebar({ workspaceId }: Props) {
               }`}
             >
               <div
-                onClick={() => navigate(`/workspace/${workspaceId}/document/${doc.id}`)}
+                onClick={() => {
+                  navigate(`/workspace/${workspaceId}/document/${doc.id}`)
+                  onNavigate?.()
+                }}
                 className="flex-1 cursor-pointer truncate"
               >
                 {doc.title}
