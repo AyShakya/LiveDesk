@@ -8,7 +8,12 @@ import InviteModal from "./InviteModal"
 import type { Workspace } from "../types/workspace"
 import { WorkspaceHeaderSkeleton } from "./ui/Skeleton"
 
-export default function WorkspaceHeader() {
+interface Props {
+  onToggleSidebar: () => void
+  isSidebarOpen: boolean
+}
+
+export default function WorkspaceHeader({ onToggleSidebar, isSidebarOpen }: Props) {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
 
@@ -44,8 +49,16 @@ export default function WorkspaceHeader() {
   }
 
   return (
-    <div className="flex items-center justify-between border-b border-violet-100 bg-white/95 px-6 py-4">
-      <div className="flex items-center gap-3">
+    <div className="sticky top-0 z-30 flex flex-wrap items-center justify-between gap-4 border-b border-violet-100 bg-white/95 px-4 py-3 backdrop-blur md:px-6">
+      <div className="flex min-w-0 items-center gap-3">
+        <button
+          type="button"
+          onClick={onToggleSidebar}
+          aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
+          className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-violet-200 bg-white text-xl text-violet-700 transition hover:bg-violet-50 lg:hidden"
+        >
+          ☰
+        </button>
         <h1 className="title-font text-2xl font-semibold text-violet-900">
           {workspace.name}
         </h1>
@@ -57,7 +70,7 @@ export default function WorkspaceHeader() {
         )}
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto sm:gap-3">
         <button onClick={() => setShowMembers(true)} className="btn-secondary text-sm">
           Members
         </button>

@@ -101,9 +101,9 @@ export function WorkspaceHeaderSkeleton() {
   );
 }
 
-export function SidebarSkeleton() {
+export function SidebarSkeleton({ className }: { className?: string }) {
   return (
-    <aside className="flex w-80 flex-col border-r border-violet-100 bg-white/95">
+    <aside className={cx("flex w-80 flex-col border-r border-violet-100 bg-white/95", className)}>
       <div className="border-b border-violet-100 px-6 py-4">
         <Skeleton className="h-7 w-32" />
       </div>
