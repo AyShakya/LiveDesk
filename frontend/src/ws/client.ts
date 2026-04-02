@@ -26,6 +26,7 @@ export function connectWebSocket(
 
   // If switching urls, close existing socket but don't mark manual close
   disconnectWebSocket(false);
+  messageQueue = [];
 
   currentUrl = url;
   manuallyClosed = false;
@@ -132,6 +133,10 @@ export function disconnectWebSocket(manual = true) {
 
   if (socket) {
     try {
+      socket.onclose = null;
+      socket.onerror = null;
+      socket.onmessage = null;
+      socket.onopen = null;
       socket.close();
     } catch {}
     socket = null;

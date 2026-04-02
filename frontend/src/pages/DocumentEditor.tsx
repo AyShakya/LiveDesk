@@ -134,6 +134,7 @@ export default function DocumentEditor() {
   );
   const [lastVisibleEditAt, setLastVisibleEditAt] = useState<number | null>(null);
 
+  const isSyncedWithWSRef = useRef(false);
   const lastSentRef = useRef(0);
   const throttleInterval = 20;
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -152,6 +153,12 @@ export default function DocumentEditor() {
       editor.value = nextValue;
     }
   }
+
+  useEffect(() => {
+    if (!loading && textareaRef.current && contentRef.current !== undefined) {
+      setEditorValue(contentRef.current);
+    }
+  }, [loading]);
 
   function hasQueuedChanges() {
     return queuedValueRef.current !== null;
@@ -173,11 +180,13 @@ export default function DocumentEditor() {
         if (isCancelled) return;
 
         setDocRecord(data);
-        contentRef.current = data.content;
-        saveOnExitRef.current = data.content;
-        queuedValueRef.current = null;
-        setEditorValue(data.content);
-        setLastVisibleEditAt(data.content ? Date.now() : null);
+        
+        if (!isSyncedWithWSRef.current) {
+          contentRef.current = data.content;
+          saveOnExitRef.current = data.content;
+          setEditorValue(data.content);
+          setLastVisibleEditAt(data.content ? Date.now() : null);
+        }
       } catch (error) {
         if (isCancelled) return;
         console.error("Failed to load document", error);
@@ -246,6 +255,11 @@ export default function DocumentEditor() {
           setLastVisibleEditAt(Date.now());
           setSyncState(wsStatusRef.current === "connected" ? "live" : "offline");
 
+          if (message.type === "DOC_SYNC") {
+            isSyncedWithWSRef.current = true;
+            setLoading(false);
+          }
+
           requestAnimationFrame(() => {
             if (editor) {
               editor.selectionStart = nextSelectionStart;
@@ -294,9 +308,13 @@ export default function DocumentEditor() {
     }
 
     function saveLatestDocument() {
+      if (loading || !isSyncedWithWSRef.current) {
+        return;
+      }
+
       const latestValue = queuedValueRef.current ?? textareaRef.current?.value ?? saveOnExitRef.current;
 
-      if (latestValue === null || latestValue === contentRef.current) {
+      if (latestValue === null || latestValue === undefined || latestValue === contentRef.current) {
         return;
       }
 

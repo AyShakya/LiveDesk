@@ -4,14 +4,14 @@ import { documentCache } from "../../websocket/cacheModule.js";
 export function startDocumentWorkers() {
   setInterval(() => {
     const now = Date.now();
-    const IDLE_LIMIT = 10 * 60 * 1000;
+    const IDLE_LIMIT = 5 * 60 * 1000;
 
     for (const [docId, doc] of documentCache) {
       if (now - doc.lastAccess > IDLE_LIMIT) {
         documentCache.delete(docId);
       }
     }
-  }, 600000);
+  }, 300000);
   setInterval(async () => {
     const BATCH_LIMIT = 100;
     let processed = 0;
@@ -38,5 +38,5 @@ export function startDocumentWorkers() {
         console.error("Failed to persist document", err);
       }
     }
-  }, 5000);
+  }, 2000);
 }

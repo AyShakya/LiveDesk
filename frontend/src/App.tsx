@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
+import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom"
 import { useAuth } from "./auth/AuthContext"
 import { Suspense, lazy } from "react"
 
@@ -95,7 +95,7 @@ export default function App() {
               path="document/:docId"
               element={
                 <Suspense fallback={<WorkspaceRouteSkeleton />}>
-                  <DocumentEditor />
+                  <DocumentEditorWrapper />
                 </Suspense>
               }
             />
@@ -113,4 +113,9 @@ export default function App() {
       </Routes>
     </BrowserRouter>
   )
+}
+
+function DocumentEditorWrapper() {
+  const { docId } = useParams<{ docId: string }>()
+  return <DocumentEditor key={docId} />
 }

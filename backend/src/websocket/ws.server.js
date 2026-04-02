@@ -192,7 +192,7 @@ export function initWebSocket(server) {
 
         if (docSockets?.size === 0) {
           docs.delete(docId);
-          documentCache.delete(docId);
+          // documentCache.delete(docId);
         }
 
         if (docs.size === 0) {
