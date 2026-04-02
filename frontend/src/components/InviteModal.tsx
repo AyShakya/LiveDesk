@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { createPortal } from "react-dom"
 import { getWorkspace } from "../api/workspaces"
 import type { Workspace } from "../types/workspace"
 
@@ -15,18 +16,31 @@ export default function InviteModal({ workspaceId, onClose }: Props) {
     load()
   }, [])
 
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose()
+      }
+    }
+
+    window.addEventListener("keydown", onKeyDown)
+
+    return () => window.removeEventListener("keydown", onKeyDown)
+  }, [onClose])
+
   async function load() {
     const data = await getWorkspace(workspaceId)
     setWorkspace(data)
   }
 
   if (!workspace) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-violet-950/20 px-4">
+    return createPortal(
+      <div className="fixed inset-0 z-[90] flex items-center justify-center bg-violet-950/30 px-4 backdrop-blur-sm">
         <div className="glass-card p-6">
           Loading invite...
         </div>
-      </div>
+      </div>,
+      document.body,
     )
   }
 
@@ -41,11 +55,15 @@ export default function InviteModal({ workspaceId, onClose }: Props) {
     navigator.clipboard.writeText(inviteLink)
   }
 
-  return (
-
-    <div className="fixed inset-0 z-50 flex justify-center overflow-y-auto bg-violet-950/20 p-4 sm:items-center">
-
-      <div className="glass-card w-full max-w-[520px] max-h-[calc(100dvh-2rem)] overflow-auto">
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[90] flex justify-center overflow-y-auto bg-violet-950/30 p-4 backdrop-blur-sm sm:items-center"
+      onClick={onClose}
+    >
+      <div
+        className="glass-card max-h-[calc(100dvh-2rem)] w-full max-w-[560px] overflow-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
 
         <div className="px-6 py-4 border-b border-violet-100 flex justify-between items-center">
 
@@ -115,7 +133,7 @@ export default function InviteModal({ workspaceId, onClose }: Props) {
 
       </div>
 
-    </div>
-
+    </div>,
+    document.body,
   )
 }

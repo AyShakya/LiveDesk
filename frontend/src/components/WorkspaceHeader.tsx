@@ -49,8 +49,9 @@ export default function WorkspaceHeader({ onToggleSidebar, isSidebarOpen }: Prop
   }
 
   return (
-    <div className="sticky top-0 z-30 flex flex-wrap items-center justify-between gap-4 border-b border-violet-100 bg-white/95 px-4 py-3 backdrop-blur md:px-6">
-      <div className="flex min-w-0 items-center gap-3">
+    <>
+      <div className="sticky top-0 z-30 flex flex-wrap items-center justify-between gap-3 border-b border-violet-100 bg-white/95 px-4 py-3 backdrop-blur md:px-6">
+        <div className="flex min-w-0 items-center gap-3">
         <button
           type="button"
           onClick={onToggleSidebar}
@@ -59,32 +60,39 @@ export default function WorkspaceHeader({ onToggleSidebar, isSidebarOpen }: Prop
         >
           ☰
         </button>
-        <h1 className="title-font text-2xl font-semibold text-violet-900">
+          <h1 className="title-font truncate text-xl font-semibold text-violet-900 sm:text-2xl">
           {workspace.name}
-        </h1>
+          </h1>
 
-        {workspace.role && (
-          <span className="rounded-full border border-pink-200 bg-pink-100 px-2.5 py-1 text-xs capitalize text-pink-700">
-            {workspace.role}
-          </span>
-        )}
-      </div>
+          {workspace.role && (
+            <span className="hidden rounded-full border border-pink-200 bg-pink-100 px-2.5 py-1 text-xs capitalize text-pink-700 sm:inline-flex">
+              {workspace.role}
+            </span>
+          )}
+        </div>
 
-      <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto sm:gap-3">
-        <button onClick={() => setShowMembers(true)} className="btn-secondary text-sm">
-          Members
-        </button>
+        <div className="flex w-full items-center justify-end gap-2 sm:w-auto sm:gap-3">
+          <button
+            onClick={() => setShowMembers(true)}
+            className="btn-secondary whitespace-nowrap px-3 py-2 text-sm"
+          >
+            Members
+          </button>
 
-        <button onClick={() => setShowInvite(true)} className="btn-secondary text-sm">
-          Invite
-        </button>
+          <button
+            onClick={() => setShowInvite(true)}
+            className="btn-secondary whitespace-nowrap px-3 py-2 text-sm"
+          >
+            Invite
+          </button>
 
-        <button
-          onClick={() => navigate("/workspaces")}
-          className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 hover:bg-rose-100"
-        >
-          Exit
-        </button>
+          <button
+            onClick={() => navigate("/workspaces")}
+            className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 hover:bg-rose-100"
+          >
+            Exit
+          </button>
+        </div>
       </div>
 
       {showMembers && id && (
@@ -94,6 +102,6 @@ export default function WorkspaceHeader({ onToggleSidebar, isSidebarOpen }: Prop
       {showInvite && id && (
         <InviteModal workspaceId={id} onClose={() => setShowInvite(false)} />
       )}
-    </div>
+    </>
   )
 }
