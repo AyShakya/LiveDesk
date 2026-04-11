@@ -136,6 +136,7 @@ export default function DocumentEditor() {
   );
   const [lastVisibleEditAt, setLastVisibleEditAt] = useState<number | null>(null);
   const [isMembersPanelOpen, setIsMembersPanelOpen] = useState(false);
+  const membersPanelRef = useRef<HTMLDivElement | null>(null);
 
   const isSyncedWithWSRef = useRef(false);
   const lastSentRef = useRef(0);
@@ -171,6 +172,32 @@ export default function DocumentEditor() {
   useEffect(() => {
     wsStatusRef.current = wsStatus;
   }, [wsStatus]);
+
+  useEffect(() => {
+    function handleOutsideClick(event: MouseEvent) {
+      if (!membersPanelRef.current) {
+        return;
+      }
+
+      if (!membersPanelRef.current.contains(event.target as Node)) {
+        setIsMembersPanelOpen(false);
+      }
+    }
+
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsMembersPanelOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, []);
 
   useEffect(() => {
     if (!docId) return;
@@ -542,22 +569,32 @@ export default function DocumentEditor() {
             </div>
           </div>
 
-          <div className="w-full max-w-sm rounded-2xl border border-violet-100 bg-white/80 p-2">
+          <div className="relative w-full max-w-sm" ref={membersPanelRef}>
             <button
               type="button"
               onClick={() => setIsMembersPanelOpen((prev) => !prev)}
-              className="flex w-full items-center justify-between rounded-xl px-2 py-1.5 text-left text-xs font-semibold text-violet-700 transition hover:bg-violet-50"
+              className="flex w-full items-center justify-between rounded-xl border border-violet-100 bg-white/90 px-3 py-2 text-left text-xs font-semibold text-violet-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-violet-50"
+              aria-expanded={isMembersPanelOpen}
+              aria-haspopup="true"
             >
               <span>
                 Active members in this document ({onlineUsers.length})
               </span>
-              <span className="text-violet-500">
-                {isMembersPanelOpen ? "Hide" : "Show"}
+              <span
+                className={`text-violet-500 transition-transform duration-200 ${isMembersPanelOpen ? "rotate-180" : ""}`}
+              >
+                ▼
               </span>
             </button>
 
-            {isMembersPanelOpen && (
-              <ul className="mt-2 max-h-48 space-y-1 overflow-auto px-1 pb-1">
+            <div
+              className={`pointer-events-none absolute right-0 z-10 mt-2 w-full origin-top rounded-2xl border border-violet-100 bg-white/95 p-2 shadow-[0_18px_40px_rgba(76,29,149,0.2)] backdrop-blur transition-all duration-200 ${
+                isMembersPanelOpen
+                  ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
+                  : "-translate-y-2 scale-95 opacity-0"
+              }`}
+            >
+              <ul className="max-h-56 space-y-1 overflow-auto pr-1">
                 {onlineUsers.length === 0 ? (
                   <li className="rounded-lg bg-violet-50 px-2 py-1.5 text-xs text-violet-500">
                     No other active members in this document right now.
@@ -573,7 +610,7 @@ export default function DocumentEditor() {
                   ))
                 )}
               </ul>
-            )}
+            </div>
           </div>
         </div>
       </div>
