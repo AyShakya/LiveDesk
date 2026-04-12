@@ -119,6 +119,7 @@ LiveDesk/
 ---
 
 ⚡ Challenges Solved
+
 -❌ Eliminated CORS issues using Nginx reverse proxy
 -🔄 Synced real-time edits across multiple clients reliably
 -🧩 Managed inter-service communication using Docker networking
@@ -127,6 +128,7 @@ LiveDesk/
 ---
 
 🚀 Future Improvements
+
 -Operational Transformation (OT) / CRDT for conflict resolution
 -Persistent document versioning
 -Authentication & access control
