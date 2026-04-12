@@ -99,11 +99,11 @@ http://localhost
 ---
 
 🔁 How It Works (Flow)
-1.User connects to WebSocket server
-2.Joins a document room/session
-3.Edits are sent via WebSocket events
-4.Backend publishes updates via Redis
-5.All subscribed clients receive updates instantly
+1. User connects to WebSocket server
+2. Joins a document room/session
+3. Edits are sent via WebSocket events
+4. Backend publishes updates via Redis
+5. All subscribed clients receive updates instantly
 
 ---
 
@@ -120,20 +120,20 @@ LiveDesk/
 
 ⚡ Challenges Solved
 
--❌ Eliminated CORS issues using Nginx reverse proxy
--🔄 Synced real-time edits across multiple clients reliably
--🧩 Managed inter-service communication using Docker networking
--⚙️ Ensured reproducible setup with containerized architecture
+- ❌ Eliminated CORS issues using Nginx reverse proxy
+- 🔄 Synced real-time edits across multiple clients reliably
+- 🧩 Managed inter-service communication using Docker networking
+- ⚙️ Ensured reproducible setup with containerized architecture
 
 ---
 
 🚀 Future Improvements
 
--Operational Transformation (OT) / CRDT for conflict resolution
--Persistent document versioning
--Authentication & access control
--Horizontal scaling with multiple backend instances
--WebRTC for peer-to-peer optimizations
+- Operational Transformation (OT) / CRDT for conflict resolution
+- Persistent document versioning
+- Authentication & access control
+- Horizontal scaling with multiple backend instances
+- WebRTC for peer-to-peer optimizations
 
 ---
 
