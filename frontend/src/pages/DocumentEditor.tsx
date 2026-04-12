@@ -490,7 +490,7 @@ export default function DocumentEditor() {
           retryInMs && retryAttempt > 0
             ? `Retrying automatically (attempt ${retryAttempt}) in ${Math.ceil(retryInMs / 1000)}s.`
             : "Live updates will resume automatically when the connection is back.",
-        tone: "text-rose-600 bg-rose-50 border-rose-100",
+        tone: "text-[#8a2d2b] bg-[#ffd9d7]",
       };
     }
 
@@ -498,7 +498,7 @@ export default function DocumentEditor() {
       return {
         label: "Connecting",
         detail: "Rejoining the live session in the background.",
-        tone: "text-amber-600 bg-amber-50 border-amber-100",
+        tone: "text-[#7b6400] bg-[#fff2bf]",
       };
     }
 
@@ -506,14 +506,14 @@ export default function DocumentEditor() {
       return {
         label: "Live",
         detail: "Everyone viewing this document sees changes instantly.",
-        tone: "text-emerald-700 bg-emerald-50 border-emerald-100",
+        tone: "text-[#007169] bg-[#cdeee9]",
       };
     }
 
     return {
       label: "Ready",
       detail: "Start typing to collaborate in real time.",
-      tone: "text-violet-700 bg-violet-50 border-violet-100",
+      tone: "text-[#6236ff] bg-[#ece8ff]",
     };
   }, [retryAttempt, retryInMs, syncState, wsStatus]);
 
@@ -522,25 +522,25 @@ export default function DocumentEditor() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl">
-      <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+    <div className="mx-auto max-w-6xl">
+      <div className="mb-8 flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-violet-100 bg-white/90 px-3 py-1 text-xs font-semibold text-violet-700 shadow-sm backdrop-blur">
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-[#cdeee9] px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.05em] text-[#007169]">
             <span className="soft-pulse h-2 w-2 rounded-full bg-emerald-500" />
             Markdown editing with real-time collaboration
           </div>
 
-          <h1 className="title-font text-3xl font-semibold text-violet-900">
+          <h1 className="title-font text-6xl font-extrabold tracking-[-0.02em] text-[#373830]">
             {docRecord?.title}
           </h1>
-          <p className="mt-2 text-sm text-violet-500">
+          <p className="mt-2 text-sm text-[#66695e]">
             {formatLastChange(lastVisibleEditAt)}
           </p>
         </div>
 
         <div className="flex flex-col items-start gap-3 lg:items-end">
           <div
-            className={`inline-flex min-h-9 items-center gap-2 rounded-full border px-3 py-1 text-sm font-medium ${statusMeta.tone}`}
+            className={`inline-flex min-h-9 items-center gap-2 rounded-full px-4 py-1.5 text-sm font-semibold ${statusMeta.tone}`}
           >
             <span className="text-base leading-none">●</span>
             {statusMeta.label}
@@ -551,7 +551,7 @@ export default function DocumentEditor() {
               {onlineUsers.map((user) => (
                 <div
                   key={user.id}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-pink-200 bg-pink-100 text-sm text-pink-700 transition-transform duration-200 hover:scale-105"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#fefdf1] bg-[#ffc3bf] text-sm text-[#8a2d2b] transition-transform duration-200 hover:scale-105"
                   title={user.email}
                 >
                   {user.email[0].toUpperCase()}
@@ -559,8 +559,8 @@ export default function DocumentEditor() {
               ))}
             </div>
 
-            <div className="text-right text-xs text-violet-500">
-              <div className="font-semibold text-violet-700">
+            <div className="text-right text-xs text-[#66695e]">
+              <div className="font-semibold text-[#373830]">
                 {onlineUsers.length > 0
                   ? `${onlineUsers.length} collaborator${onlineUsers.length > 1 ? "s" : ""} online`
                   : "Only you are here"}
@@ -573,7 +573,7 @@ export default function DocumentEditor() {
             <button
               type="button"
               onClick={() => setIsMembersPanelOpen((prev) => !prev)}
-              className="flex w-full items-center justify-between rounded-xl border border-violet-100 bg-white/90 px-3 py-2 text-left text-xs font-semibold text-violet-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-violet-50"
+              className="flex w-full items-center justify-between rounded-2xl bg-[#f0efe4] px-4 py-2.5 text-left text-xs font-semibold text-[#373830] transition-all duration-200 hover:bg-[#e8e6d8]"
               aria-expanded={isMembersPanelOpen}
               aria-haspopup="true"
             >
@@ -581,14 +581,14 @@ export default function DocumentEditor() {
                 Active members in this document ({onlineUsers.length})
               </span>
               <span
-                className={`text-violet-500 transition-transform duration-200 ${isMembersPanelOpen ? "rotate-180" : ""}`}
+                className={`text-[#66695e] transition-transform duration-200 ${isMembersPanelOpen ? "rotate-180" : ""}`}
               >
                 ▼
               </span>
             </button>
 
             <div
-              className={`pointer-events-none absolute right-0 z-10 mt-2 w-full origin-top rounded-2xl border border-violet-100 bg-white/95 p-2 shadow-[0_18px_40px_rgba(76,29,149,0.2)] backdrop-blur transition-all duration-200 ${
+              className={`pointer-events-none absolute right-0 z-10 mt-2 w-full origin-top rounded-2xl bg-white p-2 shadow-[0px_20px_40px_rgba(55,56,48,0.08)] transition-all duration-200 ${
                 isMembersPanelOpen
                   ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
                   : "-translate-y-2 scale-95 opacity-0"
@@ -596,14 +596,14 @@ export default function DocumentEditor() {
             >
               <ul className="max-h-56 space-y-1 overflow-auto pr-1">
                 {onlineUsers.length === 0 ? (
-                  <li className="rounded-lg bg-violet-50 px-2 py-1.5 text-xs text-violet-500">
+                  <li className="rounded-lg bg-[#fbfaed] px-2 py-1.5 text-xs text-[#66695e]">
                     No other active members in this document right now.
                   </li>
                 ) : (
                   onlineUsers.map((user) => (
                     <li
                       key={`member-${user.id}`}
-                      className="rounded-lg bg-violet-50 px-2 py-1.5 text-xs text-violet-700"
+                      className="rounded-lg bg-[#fbfaed] px-2 py-1.5 text-xs text-[#373830]"
                     >
                       {user.email}
                     </li>
@@ -615,24 +615,24 @@ export default function DocumentEditor() {
         </div>
       </div>
 
-      <div className="glass-card mb-4 flex flex-wrap items-center justify-between gap-3 p-3 fade-up">
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-[1.5rem] bg-white/90 p-3 fade-up shadow-[0px_20px_40px_rgba(55,56,48,0.06)]">
         <div className="flex flex-wrap gap-2">
           <button
-            className="btn-secondary text-sm"
+            className="btn-secondary text-sm px-5 py-2"
             onClick={() => handleToolbarAction("bold")}
             type="button"
           >
             Bold
           </button>
           <button
-            className="btn-secondary text-sm"
+            className="btn-secondary text-sm px-5 py-2"
             onClick={() => handleToolbarAction("italic")}
             type="button"
           >
             Italic
           </button>
           <button
-            className="btn-secondary text-sm"
+            className="btn-secondary text-sm px-5 py-2"
             onClick={() => handleToolbarAction("heading")}
             type="button"
           >
@@ -640,23 +640,23 @@ export default function DocumentEditor() {
           </button>
         </div>
 
-        <div className="rounded-full bg-violet-50 px-3 py-1 text-xs font-medium text-violet-600">
+        <div className="rounded-full bg-[#ece8ff] px-4 py-1.5 text-xs font-medium text-[#6236ff]">
           Use Markdown shortcuts like **bold**, *italic*, and # headings.
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-[28px] border border-violet-100 bg-white shadow-[0_24px_60px_rgba(124,58,237,0.12)] transition-shadow duration-300 focus-within:shadow-[0_28px_70px_rgba(236,72,153,0.16)]">
+      <div className="overflow-hidden rounded-[2.25rem] bg-white shadow-[0px_20px_40px_rgba(55,56,48,0.06)] transition-shadow duration-300 focus-within:shadow-[0px_24px_50px_rgba(55,56,48,0.1)]">
         <textarea
           ref={textareaRef}
           defaultValue=""
           onChange={(e) => handleChange(e.target.value)}
           spellCheck={false}
-          className="min-h-[540px] w-full resize-y border-0 bg-transparent p-6 text-lg leading-8 text-violet-950 focus:outline-none focus:ring-0"
+          className="min-h-[540px] w-full resize-y border-0 bg-transparent p-8 text-lg leading-8 text-[#373830] focus:outline-none focus:ring-0"
           placeholder="Start typing in Markdown..."
         />
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-violet-500">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs uppercase tracking-[0.05em] text-[#66695e]">
         <span>{statusMeta.detail}</span>
         <span>
           {syncState === "offline"

@@ -10,7 +10,7 @@ export default function WorkspaceLayout() {
   if (!id) return null
 
   return (
-    <div className="flex h-full min-h-screen overflow-hidden bg-gradient-to-br from-violet-50/50 via-white to-pink-50/40">
+    <div className="flex min-h-[calc(100vh-80px)] overflow-hidden bg-[#fefdf1]">
       <DocumentsSidebar workspaceId={id} className="hidden lg:flex" />
 
       {isSidebarOpen && (
@@ -19,11 +19,11 @@ export default function WorkspaceLayout() {
             type="button"
             aria-label="Close documents sidebar"
             onClick={() => setIsSidebarOpen(false)}
-            className="absolute inset-0 bg-violet-950/35 backdrop-blur-[1px]"
+            className="absolute inset-0 bg-[#373830]/20 backdrop-blur-[1px]"
           />
           <DocumentsSidebar
             workspaceId={id}
-            className="relative z-10 h-full w-[88vw] max-w-sm shadow-2xl"
+            className="relative z-10 h-full w-[88vw] max-w-sm shadow-[0px_20px_40px_rgba(55,56,48,0.16)]"
             onNavigate={() => setIsSidebarOpen(false)}
           />
         </div>
