@@ -98,7 +98,7 @@ http://localhost
 
 ---
 
-###🔁 How It Works (Flow)
+🔁 How It Works (Flow)
 1.User connects to WebSocket server
 2.Joins a document room/session
 3.Edits are sent via WebSocket events
@@ -107,7 +107,7 @@ http://localhost
 
 ---
 
-###📦 Project Structure
+📦 Project Structure
 ```
 LiveDesk/
 ├── frontend/       # React + TypeScript app
@@ -119,19 +119,19 @@ LiveDesk/
 ---
 
 ⚡ Challenges Solved
-❌ Eliminated CORS issues using Nginx reverse proxy
-🔄 Synced real-time edits across multiple clients reliably
-🧩 Managed inter-service communication using Docker networking
-⚙️ Ensured reproducible setup with containerized architecture
+-❌ Eliminated CORS issues using Nginx reverse proxy
+-🔄 Synced real-time edits across multiple clients reliably
+-🧩 Managed inter-service communication using Docker networking
+-⚙️ Ensured reproducible setup with containerized architecture
 
 ---
 
-###🚀 Future Improvements
-Operational Transformation (OT) / CRDT for conflict resolution
-Persistent document versioning
-Authentication & access control
-Horizontal scaling with multiple backend instances
-WebRTC for peer-to-peer optimizations
+🚀 Future Improvements
+-Operational Transformation (OT) / CRDT for conflict resolution
+-Persistent document versioning
+-Authentication & access control
+-Horizontal scaling with multiple backend instances
+-WebRTC for peer-to-peer optimizations
 
 ---
 
@@ -139,5 +139,5 @@ WebRTC for peer-to-peer optimizations
 
 Ayush Shakya
 
-GitHub: https://github.com/AyShakya
-LinkedIn: https://linkedin.com/in/ayush-shakya24
+-GitHub: https://github.com/AyShakya
+-LinkedIn: https://linkedin.com/in/ayush-shakya24
