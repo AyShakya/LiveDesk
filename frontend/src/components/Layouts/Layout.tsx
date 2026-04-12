@@ -8,6 +8,8 @@ export default function Layout() {
   const isWorkspaceRoute =
     location.pathname.startsWith("/workspaces") ||
     location.pathname.startsWith("/workspace/")
+  const isTemplatesRoute = location.pathname.startsWith("/templates")
+  const isResourcesRoute = location.pathname.startsWith("/resources")
 
   return (
     <div className="min-h-screen bg-[#fefdf1] text-[#373830]">
@@ -21,17 +23,29 @@ export default function Layout() {
             <nav className="hidden items-center gap-7 text-[1.05rem] font-semibold md:flex">
               <Link
                 to="/workspaces"
-                className={`pb-1 ${isWorkspaceRoute ? "text-[#6236ff] border-b-2 border-[#6236ff]" : "text-[#66695e]"}`}
+                className={`pb-1 transition-colors ${isWorkspaceRoute ? "text-[#6236ff] border-b-2 border-[#6236ff]" : "text-[#66695e] hover:text-[#373830]"}`}
               >
                 Workspaces
               </Link>
-              <span className="text-[#66695e]">Templates</span>
-              <span className="text-[#66695e]">Resources</span>
+              <Link
+                to="/templates"
+                className={`pb-1 transition-colors ${isTemplatesRoute ? "text-[#6236ff] border-b-2 border-[#6236ff]" : "text-[#66695e] hover:text-[#373830]"}`}
+              >
+                Templates
+              </Link>
+              <Link
+                to="/resources"
+                className={`pb-1 transition-colors ${isResourcesRoute ? "text-[#6236ff] border-b-2 border-[#6236ff]" : "text-[#66695e] hover:text-[#373830]"}`}
+              >
+                Resources
+              </Link>
             </nav>
           </div>
 
           <div className="flex items-center gap-3">
-            <button className="btn-primary px-8 py-3">Create New</button>
+            <Link to="/workspaces" className="btn-primary px-8 py-3">
+              New Space
+            </Link>
             <button
               onClick={logout}
               className="rounded-full bg-[#f0efe4] px-5 py-3 text-sm font-semibold text-[#373830] transition hover:bg-[#e8e6d8]"

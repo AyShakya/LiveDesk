@@ -20,6 +20,7 @@ const Register = lazy(() => import("./pages/Register"))
 const Workspaces = lazy(() => import("./pages/Workspaces"))
 const WorkspacePage = lazy(() => import("./pages/WorkspacePage"))
 const DocumentEditor = lazy(() => import("./pages/DocumentEditor"))
+const ComingSoon = lazy(() => import("./pages/ComingSoon"))
 const NotFound = lazy(() => import("./pages/NotFound"))
 
 function WorkspaceRouteSkeleton() {
@@ -77,6 +78,24 @@ export default function App() {
             element={
               <Suspense fallback={<DashboardSkeleton />}>
                 <Workspaces />
+              </Suspense>
+            }
+          />
+
+          <Route
+            path="/templates"
+            element={
+              <Suspense fallback={<DashboardSkeleton />}>
+                <ComingSoon />
+              </Suspense>
+            }
+          />
+
+          <Route
+            path="/resources"
+            element={
+              <Suspense fallback={<DashboardSkeleton />}>
+                <ComingSoon />
               </Suspense>
             }
           />
