@@ -88,38 +88,54 @@ Redis (Pub/Sub) ←→ PostgreSQL (Persistent Storage)
 ```bash
 git clone https://github.com/AyShakya/LiveDesk.git
 cd LiveDesk
-2. Run the Application
+```
+### 2. Run the Application
+```
 docker compose up -d --build
-3. Access the App
+```
+### 3. Access the App
 http://localhost
-🔁 How It Works (Flow)
-User connects to WebSocket server
-Joins a document room/session
-Edits are sent via WebSocket events
-Backend publishes updates via Redis
-All subscribed clients receive updates instantly
-📦 Project Structure
+
+---
+
+###🔁 How It Works (Flow)
+1.User connects to WebSocket server
+2.Joins a document room/session
+3.Edits are sent via WebSocket events
+4.Backend publishes updates via Redis
+5.All subscribed clients receive updates instantly
+
+---
+
+###📦 Project Structure
+```
 LiveDesk/
 ├── frontend/       # React + TypeScript app
 ├── backend/        # Node.js + WebSocket server
 ├── nginx/          # Reverse proxy config
 ├── docker-compose.yml
+```
+
+---
+
 ⚡ Challenges Solved
 ❌ Eliminated CORS issues using Nginx reverse proxy
 🔄 Synced real-time edits across multiple clients reliably
 🧩 Managed inter-service communication using Docker networking
 ⚙️ Ensured reproducible setup with containerized architecture
-🚀 Future Improvements
+
+---
+
+###🚀 Future Improvements
 Operational Transformation (OT) / CRDT for conflict resolution
 Persistent document versioning
 Authentication & access control
 Horizontal scaling with multiple backend instances
 WebRTC for peer-to-peer optimizations
-📸 Demo (Optional)
 
-Add screenshots or GIFs here
+---
 
-🧑‍💻 Author
+### 🧑‍💻 Author
 
 Ayush Shakya
 
