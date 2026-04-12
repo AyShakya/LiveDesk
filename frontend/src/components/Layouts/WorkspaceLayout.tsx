@@ -1,11 +1,21 @@
-import { Outlet, useParams } from "react-router-dom"
-import { useState } from "react"
+import { Outlet, useLocation, useParams } from "react-router-dom"
+import { useEffect, useRef, useState } from "react"
 import DocumentsSidebar from "../DocumentsSidebar"
 import WorkspaceHeader from "../WorkspaceHeader"
 
 export default function WorkspaceLayout() {
   const { id } = useParams<{ id: string }>()
+  const location = useLocation()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const contentRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    if (!contentRef.current) {
+      return
+    }
+
+    contentRef.current.scrollTo({ top: 0, behavior: "auto" })
+  }, [location.pathname])
 
   if (!id) return null
 
@@ -34,7 +44,7 @@ export default function WorkspaceLayout() {
           onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
           isSidebarOpen={isSidebarOpen}
         />
-        <div className="flex-1 overflow-auto p-4 md:p-6 lg:p-8">
+        <div ref={contentRef} className="flex-1 overflow-auto p-4 md:p-6 lg:p-8">
           <Outlet />
         </div>
       </div>

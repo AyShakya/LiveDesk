@@ -22,13 +22,16 @@ export default function DocumentsSidebar({ workspaceId, className, onNavigate }:
   const [documents, setDocuments] = useState<Document[]>([])
   const [title, setTitle] = useState<string>("")
   const [loading, setLoading] = useState(true)
+  const [creating, setCreating] = useState(false)
 
   useEffect(() => {
-    void load()
+    void load(true)
   }, [workspaceId])
 
-  async function load(): Promise<void> {
-    setLoading(true)
+  async function load(showLoader = false): Promise<void> {
+    if (showLoader) {
+      setLoading(true)
+    }
 
     try {
       const data: Document[] = await getWorkspaceDocuments(workspaceId)
@@ -41,7 +44,9 @@ export default function DocumentsSidebar({ workspaceId, className, onNavigate }:
   }
 
   async function handleCreate(): Promise<void> {
-    if (!title.trim()) return
+    if (!title.trim() || creating) return
+
+    setCreating(true)
 
     try {
       const doc: Document = await createDocument(workspaceId, title)
@@ -50,6 +55,8 @@ export default function DocumentsSidebar({ workspaceId, className, onNavigate }:
       await load()
     } catch (err) {
       console.error("Failed to create document", err)
+    } finally {
+      setCreating(false)
     }
   }
 
@@ -134,8 +141,8 @@ export default function DocumentsSidebar({ workspaceId, className, onNavigate }:
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
         />
 
-        <button onClick={handleCreate} className="btn-primary w-full">
-          Create
+        <button onClick={handleCreate} className="btn-primary w-full" disabled={creating}>
+          {creating ? "Creating..." : "Create"}
         </button>
       </div>
     </aside>

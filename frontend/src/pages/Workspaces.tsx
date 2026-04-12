@@ -13,31 +13,53 @@ export default function Workspaces() {
   const [newName, setNewName] = useState("");
   const [inviteCode, setInviteCode] = useState("");
   const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
+  const [joining, setJoining] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     void load();
   }, []);
 
-  async function load() {
-    setLoading(true);
-    const data = await getWorkspaces();
-    setWorkspaces(data);
-    setLoading(false);
+  async function load(showInitialLoader = false) {
+    if (showInitialLoader) {
+      setLoading(true);
+    }
+
+    try {
+      const data = await getWorkspaces();
+      setWorkspaces(data);
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleCreate() {
-    if (!newName.trim()) return;
-    await createWorkspace(newName);
-    setNewName("");
-    await load();
+    if (!newName.trim() || creating) return;
+
+    setCreating(true);
+
+    try {
+      await createWorkspace(newName);
+      setNewName("");
+      await load();
+    } finally {
+      setCreating(false);
+    }
   }
 
   async function handleJoin() {
-    if (!inviteCode.trim()) return;
-    await joinWorkspace(inviteCode);
-    setInviteCode("");
-    await load();
+    if (!inviteCode.trim() || joining) return;
+
+    setJoining(true);
+
+    try {
+      await joinWorkspace(inviteCode);
+      setInviteCode("");
+      await load();
+    } finally {
+      setJoining(false);
+    }
   }
 
   if (loading) {
@@ -65,8 +87,8 @@ export default function Workspaces() {
             onChange={(e) => setNewName(e.target.value)}
           />
 
-          <button onClick={handleCreate} className="btn-primary w-full text-lg">
-            Launch Workspace
+          <button onClick={handleCreate} className="btn-primary w-full text-lg" disabled={creating}>
+            {creating ? "Launching..." : "Launch Workspace"}
           </button>
         </div>
 
@@ -81,8 +103,12 @@ export default function Workspaces() {
             onChange={(e) => setInviteCode(e.target.value)}
           />
 
-          <button onClick={handleJoin} className="w-full rounded-full bg-[#ac403e] px-6 py-3 text-lg font-semibold text-white transition hover:brightness-105">
-            Join Team
+          <button
+            onClick={handleJoin}
+            className="w-full rounded-full bg-[#ac403e] px-6 py-3 text-lg font-semibold text-white transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={joining}
+          >
+            {joining ? "Joining..." : "Join Team"}
           </button>
         </div>
       </div>
