@@ -141,5 +141,5 @@ LiveDesk/
 
 Ayush Shakya
 
--GitHub: https://github.com/AyShakya
--LinkedIn: https://linkedin.com/in/ayush-shakya24
+- GitHub: https://github.com/AyShakya
+- LinkedIn: https://linkedin.com/in/ayush-shakya24
