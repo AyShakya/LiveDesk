@@ -50,22 +50,22 @@ export default function WorkspaceHeader({ onToggleSidebar, isSidebarOpen }: Prop
 
   return (
     <>
-      <div className="sticky top-0 z-30 flex flex-wrap items-center justify-between gap-3 border-b border-violet-100 bg-white/95 px-4 py-3 backdrop-blur md:px-6">
+      <div className="sticky top-0 z-30 flex flex-wrap items-center justify-between gap-3 bg-[#fefdf1]/90 px-4 py-4 backdrop-blur md:px-6">
         <div className="flex min-w-0 items-center gap-3">
         <button
           type="button"
           onClick={onToggleSidebar}
           aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
-          className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-violet-200 bg-white text-xl text-violet-700 transition hover:bg-violet-50 lg:hidden"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-[#f0efe4] text-xl text-[#6236ff] transition hover:bg-[#e8e6d8] lg:hidden"
         >
           ☰
         </button>
-          <h1 className="title-font truncate text-xl font-semibold text-violet-900 sm:text-2xl">
+          <h1 className="title-font truncate text-3xl font-bold text-[#373830] sm:text-4xl">
           {workspace.name}
           </h1>
 
           {workspace.role && (
-            <span className="hidden rounded-full border border-pink-200 bg-pink-100 px-2.5 py-1 text-xs capitalize text-pink-700 sm:inline-flex">
+            <span className="hidden rounded-full bg-[#ffc3bf] px-3 py-1 text-xs uppercase tracking-[0.05em] text-[#8a2d2b] sm:inline-flex">
               {workspace.role}
             </span>
           )}
@@ -74,21 +74,21 @@ export default function WorkspaceHeader({ onToggleSidebar, isSidebarOpen }: Prop
         <div className="flex w-full items-center justify-end gap-2 sm:w-auto sm:gap-3">
           <button
             onClick={() => setShowMembers(true)}
-            className="btn-secondary whitespace-nowrap px-3 py-2 text-sm"
+            className="btn-secondary whitespace-nowrap px-4 py-2 text-sm"
           >
             Members
           </button>
 
           <button
             onClick={() => setShowInvite(true)}
-            className="btn-secondary whitespace-nowrap px-3 py-2 text-sm"
+            className="btn-primary whitespace-nowrap px-5 py-2 text-sm"
           >
             Invite
           </button>
 
           <button
             onClick={() => navigate("/workspaces")}
-            className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 hover:bg-rose-100"
+            className="rounded-full bg-[#f6d7d5] px-4 py-2 text-sm font-semibold text-[#8a2d2b] transition hover:bg-[#efc6c2]"
           >
             Exit
           </button>

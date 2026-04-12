@@ -42,31 +42,31 @@ export default function Register() {
 
   return (
 
-    <div className="min-h-screen grid place-items-center px-4">
+    <div className="min-h-screen bg-[#fefdf1] grid place-items-center px-4 py-8">
 
       <form
-        className="glass-card p-8 w-[420px] max-w-full fade-up"
+        className="glass-card p-8 w-[520px] max-w-full rounded-[2.5rem] fade-up"
         onSubmit={(e) => {
           e.preventDefault()
           handleRegister()
         }}
       >
 
-        <h1 className="title-font text-3xl font-semibold mb-2 text-violet-900">
+        <h1 className="title-font text-5xl font-bold mb-2 text-[#373830]">
           Create account
         </h1>
 
-        <p className="text-violet-700 text-sm mb-6">Start collaborating in seconds.</p>
+        <p className="text-[#616458] text-lg mb-6">Start collaborating in seconds.</p>
 
         {error && (
-          <div className="text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2 text-sm mb-4">
+          <div className="text-[#8a2d2b] bg-[#ffd9d7] rounded-2xl px-3 py-2 text-sm mb-4">
             {error}
           </div>
         )}
 
         <input
           className="input mb-3"
-          placeholder="Name"
+          placeholder="Your name"
           value={name}
           onChange={(e)=>setName(e.target.value)}
         />
@@ -88,15 +88,15 @@ export default function Register() {
 
         <button
           type="submit"
-          className="btn-primary w-full"
+          className="btn-primary w-full text-xl"
           disabled={loading}
         >
-          {loading ? "Creating account..." : "Register"}
+          {loading ? "Creating account..." : "Start creating for free"}
         </button>
 
-        <div className="text-sm text-violet-700 mt-4">
+        <div className="text-base text-[#616458] mt-4 text-center">
           Already have an account?{" "}
-          <Link to="/login" className="text-pink-500 hover:text-violet-700">
+          <Link to="/login" className="font-semibold text-[#6236ff] hover:opacity-80">
             Login
           </Link>
         </div>
