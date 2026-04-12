@@ -22,13 +22,16 @@ export default function DocumentsSidebar({ workspaceId, className, onNavigate }:
   const [documents, setDocuments] = useState<Document[]>([])
   const [title, setTitle] = useState<string>("")
   const [loading, setLoading] = useState(true)
+  const [creating, setCreating] = useState(false)
 
   useEffect(() => {
-    void load()
+    void load(true)
   }, [workspaceId])
 
-  async function load(): Promise<void> {
-    setLoading(true)
+  async function load(showLoader = false): Promise<void> {
+    if (showLoader) {
+      setLoading(true)
+    }
 
     try {
       const data: Document[] = await getWorkspaceDocuments(workspaceId)
@@ -41,7 +44,9 @@ export default function DocumentsSidebar({ workspaceId, className, onNavigate }:
   }
 
   async function handleCreate(): Promise<void> {
-    if (!title.trim()) return
+    if (!title.trim() || creating) return
+
+    setCreating(true)
 
     try {
       const doc: Document = await createDocument(workspaceId, title)
@@ -50,6 +55,8 @@ export default function DocumentsSidebar({ workspaceId, className, onNavigate }:
       await load()
     } catch (err) {
       console.error("Failed to create document", err)
+    } finally {
+      setCreating(false)
     }
   }
 
@@ -76,19 +83,19 @@ export default function DocumentsSidebar({ workspaceId, className, onNavigate }:
   return (
     <aside
       className={cx(
-        "flex w-80 shrink-0 flex-col border-r border-violet-100 bg-white/95",
+        "flex w-80 shrink-0 flex-col bg-[#fbfaed]",
         className,
       )}
     >
-      <div className="border-b border-violet-100 px-5 py-4">
-        <h2 className="title-font text-xl font-semibold text-violet-900">
+      <div className="px-5 py-5">
+        <h2 className="title-font text-3xl font-bold text-[#373830]">
           Documents
         </h2>
       </div>
 
-      <div className="flex-1 space-y-2 overflow-auto p-3">
+      <div className="flex-1 space-y-2 overflow-auto px-3 pb-3">
         {documents.length === 0 && (
-          <div className="rounded-xl border border-dashed border-violet-200 bg-violet-50/70 p-4 text-sm text-violet-600">
+          <div className="rounded-3xl bg-[#f4f3e8] p-4 text-sm text-[#66695e]">
             No documents yet. Create your first document to start collaborating.
           </div>
         )}
@@ -99,10 +106,10 @@ export default function DocumentsSidebar({ workspaceId, className, onNavigate }:
           return (
             <div
               key={doc.id}
-              className={`flex items-center justify-between rounded-xl border px-3 py-2.5 transition ${
+              className={`flex items-center justify-between rounded-2xl px-3 py-2.5 transition ${
                 active
-                  ? "border-pink-200 bg-pink-50 text-violet-900"
-                  : "border-violet-100 hover:bg-violet-50"
+                  ? "bg-gradient-to-r from-[#6236ff] to-[#7f5bff] text-white"
+                  : "bg-[#f4f3e8] text-[#373830] hover:bg-[#eeede1]"
               }`}
             >
               <div
@@ -126,7 +133,7 @@ export default function DocumentsSidebar({ workspaceId, className, onNavigate }:
         })}
       </div>
 
-      <div className="border-t border-violet-100 bg-white/90 p-4">
+      <div className="bg-[#fbfaed] p-4">
         <input
           className="input mb-3"
           placeholder="New document..."
@@ -134,8 +141,8 @@ export default function DocumentsSidebar({ workspaceId, className, onNavigate }:
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
         />
 
-        <button onClick={handleCreate} className="btn-primary w-full">
-          Create
+        <button onClick={handleCreate} className="btn-primary w-full" disabled={creating}>
+          {creating ? "Creating..." : "Create"}
         </button>
       </div>
     </aside>

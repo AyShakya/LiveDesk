@@ -13,31 +13,53 @@ export default function Workspaces() {
   const [newName, setNewName] = useState("");
   const [inviteCode, setInviteCode] = useState("");
   const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
+  const [joining, setJoining] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     void load();
   }, []);
 
-  async function load() {
-    setLoading(true);
-    const data = await getWorkspaces();
-    setWorkspaces(data);
-    setLoading(false);
+  async function load(showInitialLoader = false) {
+    if (showInitialLoader) {
+      setLoading(true);
+    }
+
+    try {
+      const data = await getWorkspaces();
+      setWorkspaces(data);
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleCreate() {
-    if (!newName.trim()) return;
-    await createWorkspace(newName);
-    setNewName("");
-    await load();
+    if (!newName.trim() || creating) return;
+
+    setCreating(true);
+
+    try {
+      await createWorkspace(newName);
+      setNewName("");
+      await load();
+    } finally {
+      setCreating(false);
+    }
   }
 
   async function handleJoin() {
-    if (!inviteCode.trim()) return;
-    await joinWorkspace(inviteCode);
-    setInviteCode("");
-    await load();
+    if (!inviteCode.trim() || joining) return;
+
+    setJoining(true);
+
+    try {
+      await joinWorkspace(inviteCode);
+      setInviteCode("");
+      await load();
+    } finally {
+      setJoining(false);
+    }
   }
 
   if (loading) {
@@ -45,46 +67,54 @@ export default function Workspaces() {
   }
 
   return (
-    <div className="page-shell">
+    <div className="page-shell pb-16">
       <div className="mb-10 fade-up">
-        <p className="mb-2 text-xs uppercase tracking-[0.2em] text-pink-500">Dashboard</p>
-        <h1 className="title-font text-4xl font-bold text-violet-900">Your Workspaces</h1>
+        <h1 className="title-font text-6xl font-extrabold tracking-[-0.02em] text-[#373830]">Your Workspaces</h1>
+        <p className="mt-4 max-w-3xl text-3xl/relaxed text-[#616458]">
+          Manage your digital hubs. Create new environments for your teams or join existing creative spaces with a single code.
+        </p>
       </div>
 
-      <div className="mb-10 grid gap-6 md:grid-cols-2">
-        <div className="card p-6 transition hover:-translate-y-0.5">
-          <h2 className="mb-4 text-lg font-semibold text-violet-900">Create Workspace</h2>
+      <div className="mb-14 grid gap-8 lg:grid-cols-2">
+        <div className="card rounded-[2.25rem] bg-white/90 p-8">
+          <h2 className="title-font mb-2 text-5xl font-bold text-[#373830]">Create Workspace</h2>
+          <p className="mb-6 text-lg text-[#66695e]">Start a fresh project and invite your collaborators.</p>
 
           <input
-            className="input mb-4"
+            className="input mb-5"
             placeholder="Workspace name"
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
           />
 
-          <button onClick={handleCreate} className="btn-primary w-full">
-            Create Workspace
+          <button onClick={handleCreate} className="btn-primary w-full text-lg" disabled={creating}>
+            {creating ? "Launching..." : "Launch Workspace"}
           </button>
         </div>
 
-        <div className="card p-6 transition hover:-translate-y-0.5">
-          <h2 className="mb-4 text-lg font-semibold text-violet-900">Join Workspace</h2>
+        <div className="card rounded-[2.25rem] bg-white/90 p-8">
+          <h2 className="title-font mb-2 text-5xl font-bold text-[#373830]">Join Workspace</h2>
+          <p className="mb-6 text-lg text-[#66695e]">Enter your invitation code to access an existing workspace.</p>
 
           <input
-            className="input mb-4"
+            className="input mb-5 uppercase tracking-[0.08em]"
             placeholder="Invite code"
             value={inviteCode}
             onChange={(e) => setInviteCode(e.target.value)}
           />
 
-          <button onClick={handleJoin} className="btn-secondary w-full">
-            Join Workspace
+          <button
+            onClick={handleJoin}
+            className="w-full rounded-full bg-[#ac403e] px-6 py-3 text-lg font-semibold text-white transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={joining}
+          >
+            {joining ? "Joining..." : "Join Team"}
           </button>
         </div>
       </div>
 
       {workspaces.length === 0 ? (
-        <div className="card p-6 text-violet-700">
+        <div className="rounded-3xl bg-[#fbfaed] p-8 text-lg text-[#616458]">
           No workspaces yet. Create or join one to get started.
         </div>
       ) : (
@@ -92,18 +122,18 @@ export default function Workspaces() {
           {workspaces.map((ws) => (
             <div
               key={ws.id}
-              className="card border border-violet-100 p-6 transition-all duration-200 hover:-translate-y-1 hover:border-pink-200"
+              className="rounded-[1.75rem] bg-[#fbfaed] p-6 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0px_20px_40px_rgba(55,56,48,0.08)]"
             >
-              <h3 className="mb-2 text-xl font-semibold text-violet-900">{ws.name}</h3>
+              <h3 className="title-font mb-2 text-4xl font-bold text-[#373830]">{ws.name}</h3>
 
-              <p className="mb-5 text-sm text-violet-700">
-                Invite: <span className="font-mono text-pink-500">{ws.inviteCode}</span>
+              <p className="mb-5 text-sm text-[#66695e]">
+                Invite: <span className="font-mono text-[#6236ff]">{ws.inviteCode}</span>
               </p>
 
-              <div className="flex gap-2">
+              <div className="flex gap-3">
                 <button
                   onClick={() => navigate(`/workspace/${ws.id}`)}
-                  className="btn-primary"
+                  className="btn-primary min-w-28"
                 >
                   Open
                 </button>
@@ -112,7 +142,7 @@ export default function Workspaces() {
                   onClick={() => {
                     navigator.clipboard.writeText(ws.inviteCode);
                   }}
-                  className="btn-secondary"
+                  className="btn-secondary min-w-32"
                 >
                   Copy Invite
                 </button>
