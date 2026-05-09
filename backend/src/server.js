@@ -7,6 +7,7 @@ import redis from "./config/redis.js";
 import { subscribeToPresenceEvents } from "./modules/presence/presence.pubsub.js";
 import { initWebSocket, WS_SERVER_INSTANCE_ID } from "./websocket/ws.server.js";
 import { subscribeToDocumentEvents } from "./modules/document/document.pubsub.js";
+import { applyDocumentEventToCache } from "./websocket/cacheModule.js";
 import http, { get } from "http";
 import { startDocumentWorkers } from "./modules/document/document.worker.js";
 import { getOnlineUsers } from "./modules/presence/presence.service.js";
@@ -62,6 +63,8 @@ subscribeToDocumentEvents((event) => {
     if (event.sourceInstance === WS_SERVER_INSTANCE_ID) {
       return;
     }
+
+    applyDocumentEventToCache(event);
     ws.broadcastDoc(event.workspaceId, event.docId, event, {
       excludeUserId: event.updatedBy,
     });
