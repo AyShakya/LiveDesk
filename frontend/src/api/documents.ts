@@ -1,8 +1,10 @@
 import http from "./http"
 
-export async function getWorkspaceDocuments(workspaceId: string) {
+import type { Document } from "../types/document"
+
+export async function getWorkspaceDocuments(workspaceId: string): Promise<Document[]> {
   const res = await http.get(`/documents/workspace/${workspaceId}`)
-  return res.data
+  return Array.isArray(res.data) ? res.data : (res.data.docs || [])
 }
 
 export async function createDocument(workspaceId: string, title: string) {
