@@ -50,8 +50,15 @@ router.post(
 );
 
 router.get("/", requireAuth, async (req, res) => {
-  const workspaces = await getMyWorkspaces(req.user.id);
-  res.status(200).json({ workspaces, instanceId: res.locals.instanceId });
+  console.log(`[${new Date().toISOString()}] GET /workspaces called for user ${req.user.id}`);
+  try {
+    const workspaces = await getMyWorkspaces(req.user.id);
+    console.log(`[${new Date().toISOString()}] Returning ${workspaces.length} workspaces for user ${req.user.id}`);
+    res.status(200).json({ workspaces, instanceId: res.locals.instanceId });
+  } catch (err) {
+    console.error(`[${new Date().toISOString()}] Error fetching workspaces for user ${req.user.id}:`, err);
+    res.status(500).json({ error: "Failed to fetch workspaces", instanceId: res.locals.instanceId });
+  }
 });
 
 router.get("/:workspaceId/members", requireAuth, async (req, res) => {
