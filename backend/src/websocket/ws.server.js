@@ -156,6 +156,9 @@ export function initWebSocket(server) {
       }
 
       docs.get(docId).add(ws);
+      console.log(
+        `[${WS_SERVER_INSTANCE_ID}] [ROOM_COUNT] workspaceId=${workspaceId} docId=${docId} sockets=${docs.get(docId).size}`,
+      );
       const cachedDocument = documentCache.get(docId);
       await userOnline(workspaceId, ws.userId);
       const onlineUsers = await getOnlineUsers(workspaceId);
@@ -217,7 +220,9 @@ export function initWebSocket(server) {
         console.log(
           `[${WS_SERVER_INSTANCE_ID}] [WS_DISCONNECT] userId=${ws.userId} workspaceId=${workspaceId} docId=${docId} socketsInRoomBefore=${socketCountBefore}`,
         );
-
+        console.log(
+          `[${WS_SERVER_INSTANCE_ID}] [ROOM_COUNT_AFTER] workspaceId=${workspaceId} docId=${docId} sockets=${docSockets?.size || 0}`,
+        );
         docSockets?.delete(ws);
 
         if (docSockets?.size === 0) {
