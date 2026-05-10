@@ -13,11 +13,11 @@ const sub = new Redis({
 const CHANNEL = "presence_events";
 
 export function publishPresenceEvent(event) {
-  pub.publish(CHANNEL, JSON.stringify(event));
+  return pub.publish(CHANNEL, JSON.stringify(event));
 }
 
 export function subscribeToPresenceEvents(handler) {
-  sub.subscribe(CHANNEL);
+  void sub.subscribe(CHANNEL);
 
   sub.on("message", (channel, message) => {
     if (channel === CHANNEL) {

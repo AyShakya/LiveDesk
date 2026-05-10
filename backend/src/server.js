@@ -51,6 +51,7 @@ async function startServer() {
 }
 
 subscribeToPresenceEvents(async (event) => {
+  console.log(`[${WS_SERVER_INSTANCE_ID}] [PRESENCE_EVENT_RECEIVED] type=${event.type} workspaceId=${event.workspaceId} userId=${event.userId}`);
   const users = await getOnlineUsers(event.workspaceId);
   ws.broadcast(event.workspaceId, {
     type: "PRESENCE_UPDATE",
@@ -60,6 +61,7 @@ subscribeToPresenceEvents(async (event) => {
 });
 subscribeToDocumentEvents((event) => {
   try {
+    console.log(`[${WS_SERVER_INSTANCE_ID}] [DOC_EVENT_RECEIVED] type=${event.type} workspaceId=${event.workspaceId} docId=${event.docId} sourceInstance=${event.sourceInstance}`);
     if (event.sourceInstance === WS_SERVER_INSTANCE_ID) {
       return;
     }
