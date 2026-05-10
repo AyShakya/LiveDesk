@@ -19,6 +19,14 @@ app.use((req, res, next) => {
   next();
 });
 
+// Disable caching for API responses
+app.use((req, res, next) => {
+  res.set("Cache-Control", "no-cache, no-store, must-revalidate");
+  res.set("Pragma", "no-cache");
+  res.set("Expires", "0");
+  next();
+});
+
 app.use(express.json({
   verify: (req, res, buf) => {
     if (!buf || buf.length === 0) {
