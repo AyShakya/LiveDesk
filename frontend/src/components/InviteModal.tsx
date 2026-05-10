@@ -30,7 +30,7 @@ export default function InviteModal({ workspaceId, onClose }: Props) {
 
   async function load() {
     const data = await getWorkspace(workspaceId)
-    setWorkspace(data)
+    setWorkspace(data || null)
   }
 
   if (!workspace) {
