@@ -10,12 +10,12 @@ router.post("/register", authRateLimiter, async (req, res) => {
   try {
     const { email, password, name } = req.body;
     const result = await register({ email, password, name });
-    res.status(201).json(result);
+    res.status(201).json({ ...result, instanceId: res.locals.instanceId });
   } catch (err) {
     if (err.message === "USER_ALREADY_EXISTS") {
-      return res.status(409).json({ error: "User already exists" });
+      return res.status(409).json({ error: "User already exists", instanceId: res.locals.instanceId });
     }
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Internal server error", instanceId: res.locals.instanceId });
   }
 });
 
@@ -23,18 +23,18 @@ router.post("/login", authRateLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
     const result = await login({ email, password });
-    res.json(result);
+    res.json({ ...result, instanceId: res.locals.instanceId });
   } catch (err) {
     if (err.message === "INVALID_CREDENTIALS") {
-      return res.status(401).json({ error: "Invalid credentials" });
+      return res.status(401).json({ error: "Invalid credentials", instanceId: res.locals.instanceId });
     }
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Internal server error", instanceId: res.locals.instanceId });
   }
 });
 
 router.get("/me", requireAuth, async (req, res) => {
     const user = await findUserById(req.user.id);
-    res.json(user);
+    res.json({ ...user, instanceId: res.locals.instanceId });
 });
 
 export default router;

@@ -53,14 +53,17 @@ export function broadcastLocalDoc(workspaceId, docId, message, options = {}) {
   const sockets = docs.get(String(docId));
   if (!sockets) return;
 
+  let broadcastCount = 0;
   for (const ws of sockets) {
     if (options.excludeUserId !== undefined && String(ws.userId) === String(options.excludeUserId)) {
       continue;
     }
     if (ws.readyState === ws.OPEN) {
       ws.send(JSON.stringify(message));
+      broadcastCount++;
     }
   }
+  console.log(`[${WS_SERVER_INSTANCE_ID}] [BROADCAST_LOCAL] docId=${docId} workspaceId=${workspaceId} messageType=${message.type} recipientCount=${broadcastCount} totalSockets=${sockets.size}`);
 }
 
 export function initWebSocket(server) {
@@ -93,7 +96,7 @@ export function initWebSocket(server) {
       const docId = url.searchParams.get("docId");
 
       if (!token || !workspaceId || !docId) {
-        console.log("WS rejected: missing params");
+        console.log(`[${WS_SERVER_INSTANCE_ID}] [WS_CONNECTION] REJECTED - missing params`);
         ws.close();
         return;
       }
@@ -103,7 +106,7 @@ export function initWebSocket(server) {
       try {
         user = jwt.verify(token, process.env.JWT_SECRET);
       } catch (err) {
-        console.log("WS rejected: invalid token");
+        console.log(`[${WS_SERVER_INSTANCE_ID}] [WS_CONNECTION] REJECTED - invalid token`);
         ws.close();
         return;
       }
@@ -115,7 +118,7 @@ export function initWebSocket(server) {
 
       if (!allowedWorkspace) {
         console.log(
-          `WS rejected: user=${user.userId} is not a member of workspace=${workspaceId}`,
+          `[${WS_SERVER_INSTANCE_ID}] [WS_CONNECTION] REJECTED - user=${user.userId} not member of workspace=${workspaceId}`,
         );
         ws.close();
         return;
@@ -125,7 +128,7 @@ export function initWebSocket(server) {
 
       if (!document || String(document.workspace_id) !== String(workspaceId)) {
         console.log(
-          `WS rejected: doc=${docId} is not accessible in workspace=${workspaceId}`,
+          `[${WS_SERVER_INSTANCE_ID}] [WS_CONNECTION] REJECTED - doc=${docId} not accessible in workspace=${workspaceId}`,
         );
         ws.close();
         return;
@@ -139,7 +142,7 @@ export function initWebSocket(server) {
       ws.on("pong", markAlive);
 
       console.log(
-        `WS connected user=${ws.userId} workspace=${workspaceId} doc=${docId}`,
+        `[${WS_SERVER_INSTANCE_ID}] [WS_CONNECT_SUCCESS] userId=${ws.userId} workspaceId=${workspaceId} docId=${docId}`,
       );
 
       if (!workspaceDocs.has(workspaceId)) {
@@ -194,33 +197,37 @@ export function initWebSocket(server) {
 
           if (message.type === "EDIT_DOC") {
             if(!Array.isArray(message.operations) || message.operations.length === 0 || !message.operations.every(isValidOperations)){
+              console.log(`[${WS_SERVER_INSTANCE_ID}] [EDIT_VALIDATION_FAILED] userId=${ws.userId} docId=${ws.docId}`);
               return;
             }
 
+            console.log(`[${WS_SERVER_INSTANCE_ID}] [EDIT_EVENT] userId=${ws.userId} docId=${ws.docId} workspaceId=${ws.workspaceId} operationCount=${message.operations.length} operations=[${message.operations.map(o => o.type).join(',')}]`);
             await handleDocEdit(ws, message);
           }
         } catch (err) {
-          console.error("WS message handling error:", err);
+          console.error(`[${WS_SERVER_INSTANCE_ID}] [ERROR] WS message handling error:`, err);
         }
       });
 
       ws.on("close", async () => {
         ws.off("pong", markAlive);
-        console.log(
-          `WS disconnected user=${ws.userId} workspace=${workspaceId} doc=${docId}`,
-        );
-
         const docSockets = docs.get(docId);
+        const socketCountBefore = docSockets?.size || 0;
+        
+        console.log(
+          `[${WS_SERVER_INSTANCE_ID}] [WS_DISCONNECT] userId=${ws.userId} workspaceId=${workspaceId} docId=${docId} socketsInRoomBefore=${socketCountBefore}`,
+        );
 
         docSockets?.delete(ws);
 
         if (docSockets?.size === 0) {
           docs.delete(docId);
-          // documentCache.delete(docId);
+          console.log(`[${WS_SERVER_INSTANCE_ID}] [ROOM_CLEARED] docId=${docId} workspaceId=${workspaceId}`);
         }
 
         if (docs.size === 0) {
           workspaceDocs.delete(workspaceId);
+          console.log(`[${WS_SERVER_INSTANCE_ID}] [WORKSPACE_CLEARED] workspaceId=${workspaceId}`);
         }
 
         try {
@@ -256,12 +263,15 @@ export function initWebSocket(server) {
       const sockets = docs.get(String(docId));
       if (!sockets) return;
 
+      let broadcastCount = 0;
       for (const ws of sockets) {
         if (options.excludeUserId !== undefined && String(ws.userId) === String(options.excludeUserId)) continue;
         if (ws.readyState === ws.OPEN) {
           ws.send(JSON.stringify(message));
+          broadcastCount++;
         }
       }
+      console.log(`[${WS_SERVER_INSTANCE_ID}] [BROADCAST_DOC] docId=${docId} workspaceId=${workspaceId} messageType=${message.type} recipientCount=${broadcastCount} totalSockets=${sockets.size}`);
     },
   };
 }

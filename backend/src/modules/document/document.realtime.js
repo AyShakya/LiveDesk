@@ -41,12 +41,17 @@ export async function handleDocEdit(ws, message) {
       lastAccess: Date.now(),
       dirty: false,
     });
+    console.log(`[${ws.serverInstanceId}] [EDIT_CACHE_LOAD] docId=${ws.docId} loaded from database`);
   }
   const doc = documentCache.get(ws.docId) || {};
+  const previousLen = doc.content?.length || 0;
   doc.content = typeof content === "string" ? content : applyOperations(doc.content || "", operations);
+  const newLen = doc.content?.length || 0;
   doc.lastAccess = Date.now();
   doc.dirty = true;
   documentCache.set(ws.docId, doc);
+
+  console.log(`[${ws.serverInstanceId}] [EDIT_CACHED] userId=${ws.userId} docId=${ws.docId} contentLengthBefore=${previousLen} contentLengthAfter=${newLen} operationCount=${operations.length}`);
 
   const event = {
     type: "DOC_UPDATED",

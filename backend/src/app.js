@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import { WS_SERVER_INSTANCE_ID } from "./websocket/ws.server.js";
 
 import healthRouter from "./routes/health.js";
 import authRouter from "./modules/auth/auth.controller.js";
@@ -10,6 +11,14 @@ import { apiRateLimiter } from "./middlewares/rate-limit.middleware.js";
 
 const app = express();
 app.set("trust proxy", 1);
+
+// Middleware to attach instance ID
+app.use((req, res, next) => {
+  res.locals.instanceId = WS_SERVER_INSTANCE_ID;
+  res.set("X-Instance-ID", WS_SERVER_INSTANCE_ID);
+  next();
+});
+
 app.use(express.json({
   verify: (req, res, buf) => {
     if (!buf || buf.length === 0) {

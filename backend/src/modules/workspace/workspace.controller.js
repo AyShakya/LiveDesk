@@ -19,12 +19,12 @@ router.post("/", requireAuth, async (req, res) => {
       name,
       userId: req.user.id,
     });
-    res.status(201).json(workspace);
-  } catch (error) {
+    res.status(201).json({ ...workspace, instanceId: res.locals.instanceId });
+  } catch (err) {
     if (err.message === "INVALID_NAME") {
-      return res.status(400).json({ error: "Workspace name required" });
+      return res.status(400).json({ error: "Workspace name required", instanceId: res.locals.instanceId });
     }
-    res.status(500).json({ error: "Failed to create workspace" });
+    res.status(500).json({ error: "Failed to create workspace", instanceId: res.locals.instanceId });
   }
 });
 
@@ -39,19 +39,19 @@ router.post(
         inviteCode,
         userId: req.user.id,
       });
-      res.status(200).json(workspace);
+      res.status(200).json({ ...workspace, instanceId: res.locals.instanceId });
     } catch (err) {
       if (err.message === "WORKSPACE_NOT_FOUND") {
-        return res.status(404).json({ error: "Workspace not found" });
+        return res.status(404).json({ error: "Workspace not found", instanceId: res.locals.instanceId });
       }
-      res.status(500).json({ error: "Failed to join workspace" });
+      res.status(500).json({ error: "Failed to join workspace", instanceId: res.locals.instanceId });
     }
   },
 );
 
 router.get("/", requireAuth, async (req, res) => {
   const workspaces = await getMyWorkspaces(req.user.id);
-  res.status(200).json(workspaces);
+  res.status(200).json({ workspaces, instanceId: res.locals.instanceId });
 });
 
 router.get("/:workspaceId/members", requireAuth, async (req, res) => {
@@ -60,12 +60,12 @@ router.get("/:workspaceId/members", requireAuth, async (req, res) => {
       req.params.workspaceId,
       req.user.id,
     );
-    res.json(members);
+    res.json({ members, instanceId: res.locals.instanceId });
   } catch (err) {
     if (err.message === "FORBIDDEN") {
-      return res.status(403).json({ error: "Not a workspace member" });
+      return res.status(403).json({ error: "Not a workspace member", instanceId: res.locals.instanceId });
     }
-    res.status(500).json({ error: "Failed to fetch members" });
+    res.status(500).json({ error: "Failed to fetch members", instanceId: res.locals.instanceId });
   }
 });
 
@@ -77,12 +77,12 @@ router.put("/:workspaceId", requireAuth, async (req, res) => {
       name,
       userId: req.user.id,
     });
-    res.json(workspace);
+    res.json({ ...workspace, instanceId: res.locals.instanceId });
   } catch (err) {
     if (err.message === "FORBIDDEN") {
-      return res.status(403).json({ error: "Not allowed" });
+      return res.status(403).json({ error: "Not allowed", instanceId: res.locals.instanceId });
     }
-    res.status(500).json({ error: "Failed to update workspace" });
+    res.status(500).json({ error: "Failed to update workspace", instanceId: res.locals.instanceId });
   }
 });
 
@@ -92,12 +92,12 @@ router.delete("/:workspaceId", requireAuth, async (req, res) => {
       workspaceId: req.params.workspaceId,
       userId: req.user.id,
     });
-    res.status(204).end();
+    res.status(204).json({ instanceId: res.locals.instanceId });
   } catch (err) {
     if (err.message === "FORBIDDEN") {
-      return res.status(403).json({ error: "Not allowed" });
+      return res.status(403).json({ error: "Not allowed", instanceId: res.locals.instanceId });
     }
-    res.status(500).json({ error: "Failed to delete workspace" });
+    res.status(500).json({ error: "Failed to delete workspace", instanceId: res.locals.instanceId });
   }
 });
 

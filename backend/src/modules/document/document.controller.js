@@ -12,12 +12,12 @@ router.post("/", requireAuth, async (req, res) => {
       title,
       userId: req.user.id,
     });
-    res.status(201).json(doc);
+    res.status(201).json({ ...doc, instanceId: res.locals.instanceId });
   } catch (err) {
     if (err.message === "FORBIDDEN") {
-      return res.status(403).json({ error: "Not a workspace member" });
+      return res.status(403).json({ error: "Not a workspace member", instanceId: res.locals.instanceId });
     }
-    res.status(500).json({ error: "Failed to create document" });
+    res.status(500).json({ error: "Failed to create document", instanceId: res.locals.instanceId });
   }
 });
 
@@ -27,12 +27,12 @@ router.get("/workspace/:workspaceId", requireAuth, async (req, res) => {
       workspaceId: req.params.workspaceId,
       userId: req.user.id,
     });
-    res.json(docs);
+    res.json({ docs, instanceId: res.locals.instanceId });
   } catch (err) {
     if (err.message === "FORBIDDEN") {
-      return res.status(403).json({ error: "Not a workspace member" });
+      return res.status(403).json({ error: "Not a workspace member", instanceId: res.locals.instanceId });
     }
-    res.status(500).json({ error: "Failed to fetch documents" });
+    res.status(500).json({ error: "Failed to fetch documents", instanceId: res.locals.instanceId });
   }
 });
 
@@ -42,15 +42,15 @@ router.get("/:docId", requireAuth, async (req, res) => {
       docId: req.params.docId,
       userId: req.user.id,
     });
-    res.json(doc);
+    res.json({ ...doc, instanceId: res.locals.instanceId });
   } catch (err) {
     if (err.message === "NOT_FOUND") {
-      return res.status(404).json({ error: "Document not found" });
+      return res.status(404).json({ error: "Document not found", instanceId: res.locals.instanceId });
     }
     if (err.message === "FORBIDDEN") {
-      return res.status(403).json({ error: "Access denied" });
+      return res.status(403).json({ error: "Access denied", instanceId: res.locals.instanceId });
     }
-    res.status(500).json({ error: "Failed to fetch document" });
+    res.status(500).json({ error: "Failed to fetch document", instanceId: res.locals.instanceId });
   }
 });
 
@@ -62,30 +62,30 @@ router.put("/:docId", requireAuth, async (req, res) => {
       content: req.body.content,
       userId: req.user.id,
     });
-    res.json(doc);
+    res.json({ ...doc, instanceId: res.locals.instanceId });
   } catch (err) {
     if (err.message === "NOT_FOUND") {
-      return res.status(404).json({ error: "Document not found" });
+      return res.status(404).json({ error: "Document not found", instanceId: res.locals.instanceId });
     }
     if (err.message === "FORBIDDEN") {
-      return res.status(403).json({ error: "Access denied" });
+      return res.status(403).json({ error: "Access denied", instanceId: res.locals.instanceId });
     }
-    res.status(500).json({ error: "Failed to update document" });
+    res.status(500).json({ error: "Failed to update document", instanceId: res.locals.instanceId });
   }
 });
 
 router.delete("/:docId", requireAuth, async (req, res) => {
   try {
     await deleteDoc({ docId: req.params.docId, userId: req.user.id });
-    res.status(204).end();
+    res.status(204).json({ instanceId: res.locals.instanceId });
   } catch (err) {
     if (err.message === "NOT_FOUND") {
-      return res.status(404).json({ error: "Document not found" });
+      return res.status(404).json({ error: "Document not found", instanceId: res.locals.instanceId });
     }
     if (err.message === "FORBIDDEN") {
-      return res.status(403).json({ error: "Access denied" });
+      return res.status(403).json({ error: "Access denied", instanceId: res.locals.instanceId });
     }
-    res.status(500).json({ error: "Failed to delete document" });
+    res.status(500).json({ error: "Failed to delete document", instanceId: res.locals.instanceId });
   }
 });
 
