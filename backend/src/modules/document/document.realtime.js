@@ -2,30 +2,7 @@ import pool from "../../config/postgres.js";
 import { documentCache } from "../../websocket/cacheModule.js";
 import { broadcastLocalDoc } from "../../websocket/ws.server.js";
 import { publishDocumentEvent } from "./document.pubsub.js";
-
-function applyOperations(content, operations) {
-  return operations.reduce((nextContent, operation) => {
-    switch(operation.type){
-      case "insert":
-        return(
-          nextContent.slice(0, operation.index) + operation.text + nextContent.slice(operation.index)
-        );
-      case "delete":
-        return (
-          nextContent.slice(0, operation.index) +
-          nextContent.slice(operation.index + operation.length)
-        );
-      case "replace":
-        return (
-          nextContent.slice(0, operation.index) +
-          operation.text +
-          nextContent.slice(operation.index + operation.length)
-        );
-      default:
-        return nextContent;
-    }
-  }, content);
-}
+import { applyOperations } from "./document.operations.js";
 
 export async function handleDocEdit(ws, message) {
   const { operations, content } = message;

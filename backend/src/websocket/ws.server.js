@@ -216,14 +216,15 @@ export function initWebSocket(server) {
         ws.off("pong", markAlive);
         const docSockets = docs.get(docId);
         const socketCountBefore = docSockets?.size || 0;
-        
+
         console.log(
           `[${WS_SERVER_INSTANCE_ID}] [WS_DISCONNECT] userId=${ws.userId} workspaceId=${workspaceId} docId=${docId} socketsInRoomBefore=${socketCountBefore}`,
         );
+        docSockets?.delete(ws);
+
         console.log(
           `[${WS_SERVER_INSTANCE_ID}] [ROOM_COUNT_AFTER] workspaceId=${workspaceId} docId=${docId} sockets=${docSockets?.size || 0}`,
         );
-        docSockets?.delete(ws);
 
         if (docSockets?.size === 0) {
           docs.delete(docId);
