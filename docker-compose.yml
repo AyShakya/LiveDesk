@@ -1,26 +1,64 @@
 services:
-  nginx:
-    build: 
-      context: .
-      dockerfile: nginx/Dockerfile
-    container_name: livedesk_nginx
-    ports:
-      - "80:80"
-    depends_on:
-    - backend
-  backend:
+  #nginx:
+    #build: 
+      #context: .
+      #dockerfile: nginx/Dockerfile
+    #container_name: livedesk_nginx
+    #ports:
+     # - "80:80"
+    #depends_on:
+    #- backend
+  
+  backend1:
     build: ./backend
-    container_name: livedesk_backend
+    container_name: livedesk_backend1
     ports:
-      - "4000:4000"
+      - "4001:4000"
     depends_on:
       - postgres
       - redis
+    env_file:
+      - ./backend/.env
     environment:
+      - INSTANCE_NAME=backend1
       - DB_HOST=postgres
       - DB_PORT=5432
       - REDIS_HOST=redis
-      - REDIS_PORT=6379
+    restart: always
+
+  backend2:
+    build: ./backend
+    container_name: livedesk_backend2
+    ports:
+      - "4002:4000"
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - ./backend/.env
+    environment:
+      - INSTANCE_NAME=backend2
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - REDIS_HOST=redis
+    restart: always
+
+  backend3:
+    build: ./backend
+    container_name: livedesk_backend3
+    ports:
+      - "4003:4000"
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - ./backend/.env
+    environment:
+      - INSTANCE_NAME=backend3
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - REDIS_HOST=redis
+    restart: always
     
   postgres:
     image: postgres:15
@@ -37,10 +75,6 @@ services:
   redis:
     image: redis:7
     container_name: livedesk_redis
-    ports:
-      - "6379:6379"
 
 volumes:
   pgdata:
-    external: true
-    name: backend_pgdata
